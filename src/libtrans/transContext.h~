@@ -1,0 +1,276 @@
+/**
+ * @file
+ * @author  jpoe   <>, (C) 2008, 2009
+ * @date    09/19/08
+ * @brief   This is the interface for the transaction context module.
+ *
+ * @section LICENSE
+ * Copyright: See COPYING file that comes with this distribution
+ *
+ * @section DESCRIPTION
+ * C++ Interface: transactionContext \n
+ * Full description here.
+ *
+ */
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifndef TRANSACTION_CONTEXT
+#define TRANSACTION_CONTEXT
+
+#include "transCache.h"
+#include "transCoherence.h"
+#include "icode.h"
+
+typedef int32_t IntRegValue;
+typedef struct icode *icode_ptr;
+typedef uintptr_t RAddr;
+typedef class ThreadContext *thread_ptr;
+
+class GProcessor;
+
+/**
+ * @ingroup transContext
+ * @brief   transactional context
+ *
+ * Middleware between thread context and transactional cache/coherence protocol. Exactly one per dynamic transaction.
+ */
+class transactionContext
+{
+  public:
+    /* Constructor */
+    transactionContext();
+
+    transactionContext(thread_ptr pthread, icode_ptr picode);
+
+    /* Deconstructor */
+    ~transactionContext();
+
+    /* Public Methods */
+    icode_ptr             getBeginCode();
+    IntRegValue           getIntReg(int x);
+    float                 getFpReg(int x);
+    int                   getLo();
+    int                   getHi();
+    unsigned int          getFcr0();
+    unsigned int          getFcr31();
+    transactionContext*   getParentContext();
+
+    IntRegValue           cacheLW(RAddr raddr);
+    void                  cacheSW(RAddr raddr, IntRegValue value);
+    void                  cacheSHW(RAddr raddr, IntRegValue value);
+    void                  cacheSWFP(RAddr raddr, IntRegValue value);
+    void                  cacheSDFP(RAddr raddr, unsigned long long value);
+    IntRegValue           cacheLUH(RAddr raddr);
+    IntRegValue           cacheLHW(RAddr raddr);
+    IntRegValue           cacheLUB(RAddr raddr);
+    IntRegValue           cacheLB(RAddr raddr);
+    float                 cacheLWFP(RAddr raddr);
+    double                cacheLDFP(RAddr raddr);
+    void                  cacheSB(RAddr raddr, IntRegValue value);
+    void                  cacheWriteBuffer(char *buff, RAddr buffBegin, int count);
+    void                  cacheReadBuffer(char *buff, RAddr buffBegin, int count);
+
+    void                  beginTransaction(thread_ptr pthread, icode_ptr picode);
+    void                  abortTransaction(thread_ptr pthread);
+    void                  commitTransaction(thread_ptr pthread, icode_ptr picode);
+
+    void                  cacheLW(thread_ptr pthread, icode_ptr picode, RAddr raddr);
+    void                  cacheSW(thread_ptr pthread, icode_ptr picode, RAddr raddr, IntRegValue value);
+    void                  cacheSHW(thread_ptr pthread, icode_ptr picode, RAddr raddr, IntRegValue value);
+    void                  cacheSWFP(thread_ptr pthread, icode_ptr picode, RAddr raddr, IntRegValue value);
+    void                  cacheSDFP(thread_ptr pthread, icode_ptr picode, RAddr raddr, unsigned long long value);
+    void                  cacheLUH(thread_ptr pthread, icode_ptr picode, RAddr raddr);
+    void                  cacheLHW(thread_ptr pthread, icode_ptr picode, RAddr raddr);
+    void                  cacheLUB(thread_ptr pthread, icode_ptr picode, RAddr raddr);
+    void                  cacheLB(thread_ptr pthread, icode_ptr picode, RAddr raddr);
+    void                  cacheLWFP(thread_ptr pthread, icode_ptr picode, RAddr raddr);
+    void                  cacheLDFP(thread_ptr pthread, icode_ptr picode, RAddr raddr);
+    void                  cacheSB(thread_ptr pthread, icode_ptr picode, RAddr raddr, IntRegValue value);
+    void                  cacheWriteBuffer(thread_ptr pthread, icode_ptr picode, char *buff, RAddr buffBegin, int count);
+    void                  cacheReadBuffer(thread_ptr pthread, icode_ptr picode, char *buff, RAddr buffBegin, int count);
+
+    bool                  checkAbort();
+
+    std::map<RAddr, IntRegValue>::iterator cacheGetEndIterator();
+    std::map<RAddr, IntRegValue>::iterator cacheGetBeginIterator();
+
+    icode                 *nackInstruction;
+
+  private:
+    void                  stallInstruction(thread_ptr pthread, icode_ptr picode, int stallLength);
+    void                  createStall(thread_ptr pthread, int stallLength);
+    int                   getRndDelay(int delay);
+
+    /* Variables */
+    icode_ptr             tmBeginCode;  // TM Begin Code Pointer
+    int                   pid;          // PID of the owner of the context
+    int                   tid;          // Transaction ID
+    IntRegValue           reg[33];      // Int Register Backup
+    int                   lo,hi;        // More Registers
+    unsigned int          fcr0,fcr31;   // FP Control Registers
+    float                 fp[32];       // FP Register Backup
+    transactionCache      cache;        // The Memory Cache
+    int                   depth;        // Nesting Depth
+    transactionContext    *parent;      // Parent Transaction
+
+    /* Configuration Variables */
+    int                   nackStallCycles;
+    int                   abortBaseStallCycles;
+    int                   abortVarStallCycles;
+    int                   commitBaseStallCycles;
+    int                   commitVarStallCycles;
+    int                   abortLinBackoff;
+    int                   abortExpBackoff;
+    int                   applyRandomization;
+
+};
+
+inline icode_ptr transactionContext::getBeginCode(){
+  return this->tmBeginCode;
+}
+
+inline IntRegValue transactionContext::getIntReg(int x){
+  return this->reg[x];
+}
+
+inline float transactionContext::getFpReg(int x){
+  return this->fp[x];
+}
+
+inline int transactionContext::getLo(){
+  return this->lo;
+}
+
+inline int transactionContext::getHi(){
+  return this->hi;
+}
+
+inline unsigned int transactionContext::getFcr0(){
+  return this->fcr0;
+}
+
+inline unsigned int transactionContext::getFcr31(){
+  return this->fcr31;
+}
+
+inline transactionContext* transactionContext::getParentContext(){
+  return this->parent;
+}
+
+inline IntRegValue transactionContext::cacheLW(RAddr addr){
+  return this->cache.loadWord(addr);
+}
+
+inline void transactionContext::cacheSW(RAddr addr, IntRegValue value){
+  this->cache.storeWord(addr, value);
+}
+
+inline void transactionContext::cacheSHW(RAddr addr, IntRegValue value){
+  this->cache.storeHalfWord(addr, value);
+}
+
+inline void transactionContext::cacheSWFP(RAddr addr, IntRegValue value){
+  this->cache.storeFPWord(addr, value);
+}
+
+inline void transactionContext::cacheSDFP(RAddr addr, unsigned long long value){
+  this->cache.storeDFP(addr, value);
+}
+
+inline IntRegValue transactionContext::cacheLUH(RAddr addr){
+  return this->cache.loadUnsignedHalfword(addr);
+}
+
+inline IntRegValue transactionContext::cacheLHW(RAddr addr){
+  return this->cache.loadHalfword(addr);
+}
+
+inline IntRegValue transactionContext::cacheLUB(RAddr addr){
+  return this->cache.loadByte(addr);
+}
+
+inline IntRegValue transactionContext::cacheLB(RAddr addr){
+  return this->cache.loadByte(addr);
+}
+
+inline float transactionContext::cacheLWFP(RAddr addr){
+  return this->cache.loadFPWord(addr);
+}
+
+inline double transactionContext::cacheLDFP(RAddr addr){
+  return this->cache.loadDFP(addr);
+}
+
+inline void transactionContext::cacheSB(RAddr addr, IntRegValue value){
+  this->cache.storeByte(addr, value);
+}
+
+// inline void transactionContext::cacheWriteBuffer(char *buff, RAddr buffBegin, int count){
+//   return this->cache.writeBuffer(buff,buffBegin, count);
+// }
+// 
+// inline void transactionContext::cacheReadBuffer(char *buff, RAddr buffBegin, int count){
+//   return this->cache.readBuffer(buff,buffBegin, count);
+// }
+
+inline std::map<RAddr, IntRegValue>::iterator transactionContext::cacheGetBeginIterator(){
+  return this->cache.getBeginIterator();
+}
+
+inline std::map<RAddr, IntRegValue>::iterator transactionContext::cacheGetEndIterator(){
+  return this->cache.getEndIterator();
+}
+
+inline int transactionContext::getRndDelay(int delay)
+{
+  if(applyRandomization)
+  {
+    return (int)(delay * (1+(rand()%applyRandomization)/100.0));
+  }
+  else
+    return delay;
+}
+
+#endif
+
+/*! \mainpage
+ *
+ * \image html supertrans.jpg
+ * \image latex supertrans.eps "SuperTrans" width=250px
+ * 
+ * \section intro_sec Introduction
+ *
+ * SuperTrans is a cycle-accurate, detailed hardware transactional memory model that is capable of simulating all of the major dimensions of conflict detection and version
+ * management (eager-eager, eager-lazy, and lazy-lazy). SuperTrans is built on top of SESC (included), a cycle-accurate MIPS CMP simulator. SuperTrans has been used in previous
+ * research for workload characterization of hardware transactional memory systems and is particularly suited to this task as it allows for abstraction of the underlying model
+ * implementation. While the SuperTrans implementation of eager-eager and lazy-lazy systems is based on LogTM and TCC respectively, the model allows for abstraction of the
+ * specific overheads associated with tasks such as bus arbitration, NACK and backoff stall policies, conflict detection granularity, etc. This allows the researcher to gain
+ * insight into fundamental characteristics within and across design dimensions without being limited to any single design implementation
+ *
+ * \section install_sec Installation
+ *  See documentation accompanied with the installation.
+ * 
+ *
+ */
+
+
+/**
+ * @typedef IntRegValue
+ * int32_t.
+ */
+
+/**
+ * @typedef RAddr
+ * uintptr_t.
+ */
+
+/**
+ * @typedef *thread_ptr
+ * class ThreadContext
+ */
+
+/**
+ * @typedef *icode_ptr
+ * struct icode
+ */

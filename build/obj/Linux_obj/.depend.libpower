@@ -1,0 +1,9 @@
+
+$(OBJ)/libpower.a:$(OBJ)/powermain.o $(OBJ)/cacmain.o
+$(OBJ)/cacmain.o: /home/hughes/simulators/sesc/sesc-power/src/libpower/cacmain.cpp $(SRC_DIR)/libsuc/SescConf.h $(SRC_DIR)/libsuc/ReportGen.h /home/hughes/simulators/sesc/sesc-power/src/libpower/wattch/wattch_setup.h /home/hughes/simulators/sesc/sesc-power/src/libpower/orion/orion_setup.h $(SRC_DIR)/libsuc/Config.h $(SRC_DIR)/libsuc/nanassert.h $(SRC_DIR)/libsuc/estl.h
+$(OBJ)/powermain.o: /home/hughes/simulators/sesc/sesc-power/src/libpower/powermain.cpp $(SRC_DIR)/libsuc/SescConf.h $(SRC_DIR)/libsuc/ReportGen.h /home/hughes/simulators/sesc/sesc-power/src/libpower/wattch/misc.h /home/hughes/simulators/sesc/sesc-power/src/libpower/wattch/wattch_setup.h /home/hughes/simulators/sesc/sesc-power/src/libpower/orion/orion_setup.h $(SRC_DIR)/libsuc/Config.h $(SRC_DIR)/libsuc/nanassert.h $(SRC_DIR)/libsuc/estl.h
+$(OBJ)/libpower.a: $(OBJ)/libcacti.a $(OBJ)/libwattch.a $(OBJ)/libpanalyzer.a $(OBJ)/liborion.a
+-include $(OBJ)/.depend.libcacti
+-include $(OBJ)/.depend.libwattch
+-include $(OBJ)/.depend.libpanalyzer
+-include $(OBJ)/.depend.liborion

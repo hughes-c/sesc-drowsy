@@ -1,0 +1,18 @@
+syntax: glob
+*pull*
+*push*
+*kdevelop*
+src/src.kdevelop.filelist
+src/src.kdevses
+*orig
+*kdev*
+*~
+*tags
+*tag
+Doxyfile
+
+docs
+CVS
+
+build
+debug

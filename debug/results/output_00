@@ -1,0 +1,182 @@
+.text Minor header aligment correction (400130 vs 400128)
+.data Minor header aligment correction (4724d0 vs 4724c4)
+1.bss Minor header aligment correction 4 (10000250 vs 1000024c)
+.bss Minor header aligment correction (10000250 vs 1000024c)
+static[0x45d350-0x100054dc] heap[0x10006000-0x18006000] stack[0x18006000-0x19fe6000] -> [0x9d000000-0xb6b88cb0]
+
+Transactional Memory Enabled -- Eager Eager
+Advanced Scheduling Disabled
+Simulator in Debug Mode
+
+Compiled on Aug 15 2010 at 20:33:42
+OSSim::spawn(-1,0,0x10000,0)
+ExecutionFlow[0] switchIn pid(0) 0x400130 @0
+
+Threads 3
+OSSim::spawn(0,1,0x10000,0)
+ExecutionFlow[1] switchIn pid(1) 0x4007f8 @275575
+OSSim::spawn(0,2,0x10000,0)
+ExecutionFlow[2] switchIn pid(2) 0x4007f8 @275907
+OSSim::spawn(0,3,0x10000,0)
+ExecutionFlow[3] switchIn pid(3) 0x4007f8 @275966
+OSSim::wait (cpid 0)
+ExecutionFlow[0] switchOut pid(0) 0x400b1c @277884
+OSSim::exit err[268456860] (cpid 3)
+ExecutionFlow[3] switchOut pid(3) 0x401fc0 @573082
+Waiting pid(0) is awaked (child 3 call)
+ExecutionFlow[0] switchIn pid(0) 0x400b1c @573082
+OSSim::wait (cpid 0)
+ExecutionFlow[0] switchOut pid(0) 0x400b1c @573082
+OSSim::exit err[268456860] (cpid 1)
+ExecutionFlow[1] switchOut pid(1) 0x401fc0 @866480
+Waiting pid(0) is awaked (child 1 call)
+ExecutionFlow[0] switchIn pid(0) 0x400b1c @866480
+OSSim::wait (cpid 0)
+ExecutionFlow[0] switchOut pid(0) 0x400b1c @866480
+OSSim::exit err[268456860] (cpid 2)
+ExecutionFlow[2] switchOut pid(2) 0x401fc0 @1145510
+Waiting pid(0) is awaked (child 2 call)
+ExecutionFlow[0] switchIn pid(0) 0x400b1c @1145510
+OSSim::wait (cpid 0)
+OSSim::wait (cpid 0)
+OSSim::wait (cpid 0)
+
+Value 1
+OSSim::exit err[0] (cpid 0)
+ExecutionFlow[0] switchOut pid(0) 0x401fc0 @1148019
+	pPower:  63.3358   clockPower:  3.56787  corePower:  66.9037
+	pPower:  28.3784   clockPower:  3.50314  corePower:  31.8816
+	pPower:  19.3796   clockPower:  3.50845  corePower:  22.888
+	pPower:  53.4316   clockPower:  3.44686  corePower:  56.8785
+.0, State:  0 -- 0, State:  1 -- 0, State:  2 -- 0, State:  3 -- 0, State:  4 -- 0, State:  5 -- 187181, State:  6 -- 0, State:  7 -- 0, State:  8 -- 0, State:  9 -- 0, State:  10 -- 0, State:  11 -- 0, State:  12 -- 0, State:  13 -- 0, State:  14 -- 0, State:  15 -- 0, 
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+1, State:  0 -- 0, State:  1 -- 0, State:  2 -- 0, State:  3 -- 0, State:  4 -- 0, State:  5 -- 393962, State:  6 -- 0, State:  7 -- 0, State:  8 -- 0, State:  9 -- 0, State:  10 -- 0, State:  11 -- 0, State:  12 -- 0, State:  13 -- 0, State:  14 -- 0, State:  15 -- 0, 
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+2, State:  0 -- 0, State:  1 -- 0, State:  2 -- 0, State:  3 -- 0, State:  4 -- 0, State:  5 -- 579756, State:  6 -- 0, State:  7 -- 0, State:  8 -- 0, State:  9 -- 0, State:  10 -- 0, State:  11 -- 0, State:  12 -- 0, State:  13 -- 0, State:  14 -- 0, State:  15 -- 0, 
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+3, State:  0 -- 0, State:  1 -- 0, State:  2 -- 0, State:  3 -- 0, State:  4 -- 0, State:  5 -- 198254, State:  6 -- 0, State:  7 -- 0, State:  8 -- 0, State:  9 -- 0, State:  10 -- 0, State:  11 -- 0, State:  12 -- 0, State:  13 -- 0, State:  14 -- 0, State:  15 -- 0, 
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list
+GStats::unsubscribe It should be in the list

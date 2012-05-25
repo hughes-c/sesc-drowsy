@@ -1,0 +1,41 @@
+# Bench : ./sesc.trans -k131072 -c power.conf -dresults/7_2 /home/hughes/Benchies/MIPS/asmTesting/oldTests/asmTest_mem_intensive 2 
+# File  : 7_2.xCbiuq           :       Tue May 18 09:33:04 2010
+      Exe Speed        Exe MHz         Exe Time         Sim Time (7200MHz)
+    158.330 KIPS      0.1205 MHz       6.790 secs       0.114 msec
+Proc  Avg.Time BPType       Total          RAS           BPred          BTB            BTAC
+   0   159.373  hybrid       95.50% ( 68.24% of   0.83%)  95.73% ( 97.59% of  50.37%)   0.00% 
+   1   227.312  hybrid       99.59% (  0.00% of   0.01%)  99.60% ( 99.95% of  51.33%)   0.00% 
+   2   239.000  hybrid       99.61% (  0.00% of   0.01%)  99.62% ( 99.95% of  51.35%)   0.00% 
+           nInst     BJ    Load   Store      INT      FP  : LD Forward , Replay : Worst Unit (clk)
+   0      374122   2.73%  17.67%   5.98%  73.51%   0.11%  :     52.80%     430 inst/repl  :  ALUIssueX 0.22 
+   1      350887   7.63%  20.42%   6.46%  65.49%   0.00%  :     60.73%   ????  inst/repl  :  ALUIssueX 0.19 
+   2      350053   7.59%  20.41%   6.45%  65.55%   0.00%  :     60.61%   ????  inst/repl  :  ALUIssueX 0.18 
+Proc  IPC  Active       Cycles  Busy   LDQ   STQ  IWin   ROB  Regs Ports   TLB  maxBr MisBr Br4Clk  Other
+   0  1.37  33.38       273086  34.2   0.0   0.0  10.6  25.9   0.0   0.0   0.0   0.0   28.4    0.0    0.9 
+   1  0.64  66.93       547514  16.0   0.0   0.0  27.0   4.1   0.0   0.0   0.0   0.0   52.8    0.0    0.1 
+   2  1.27  33.69       275585  31.8   0.0   0.0  53.1   8.2   0.0   0.0   0.0   0.0    7.0    0.0    0.0 
+################################################################################
+Proc  Cache Occ MissRate (RD, WR) %DMemAcc MB/s : ... 
+   0  DL1 0.1   0.66% ( 0.1%, 0.6%) 19.55%  0.10GB/s :  L1L2D 0 MB/s :  SysBus 279.399 MB/s :  MemoryBus 0 MB/s : 
+   1  DL1 0.1   1.09% ( 0.5%, 0.5%) 18.36%  0.16GB/s :  L1L2D 0 MB/s :  SysBus 279.399 MB/s :  MemoryBus 0 MB/s : 
+   2  DL1 0.1   1.07% ( 0.5%, 0.5%) 18.58%  0.16GB/s :  L1L2D 0 MB/s :  SysBus 279.399 MB/s :  MemoryBus 0 MB/s : 
+################################################################################
+Proc  Cache Occ MissRate (RD, WR) %DMemAcc MB/s : ... 
+   0  IL1 0.0   0.35% ( 0.4%, 0.0%) 34.68%  0.09GB/s :  L1L2 107.31 MB/s :  SysBus 279.399 MB/s :  MemoryBus 0 MB/s : 
+   1  IL1 0.0   0.03% ( 0.0%, 0.0%) 31.71%  0.01GB/s :  L1L2 107.31 MB/s :  SysBus 279.399 MB/s :  MemoryBus 0 MB/s : 
+   2  IL1 0.0   0.03% ( 0.0%, 0.0%) 31.63%  0.01GB/s :  L1L2 107.31 MB/s :  SysBus 279.399 MB/s :  MemoryBus 0 MB/s : 
+################################################################################
+Proc CacheName LVID revLVID Energy : ... 
+   0   DL1  13.63%  :  MVC   0.00%  : 
+   1   DL1  12.98%  :  MVC   0.00%  : 
+   2   DL1  12.95%  :  MVC   0.00%  : 
+################################################################################
+Proc        Fetch     Issue      Mem       Exec     Clock     Total (watts)
+0     0.678      9.047      4.821     23.126      7.347     45.019 
+1     0.668      8.484      1.625     23.488      6.899     41.163 
+2     0.666      8.464      1.621     23.424      6.887     41.062 
+3     0.000      0.000      0.000      0.000      2.394      2.394 
+Total     2.011     25.995      8.067     70.038     23.526    129.638 
+################################################################################
+Proc        Fetch     Issue      Mem       Exec     Clock     Total (nJ)
+NRG_Tot    228483    2953490     916577    7957380    2672940   14728900 
