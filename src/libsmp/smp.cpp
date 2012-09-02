@@ -20,7 +20,7 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
 #include <stdlib.h>
-
+#include <iostream>
 #include <vector>
 
 // sesc internal stuff
@@ -40,6 +40,11 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "SMPDebug.h"
 
 #if (defined TM)
+
+//mem tests -- kelly
+std::map<RAddr, std::vector<size_t> > memAccesses;
+std::map<RAddr, std::vector<size_t> >::const_iterator memIter;
+
 #include "transReport.h"
 #include "transCoherence.h"
 
@@ -114,6 +119,25 @@ int main(int argc, char**argv, char **envp)
   #elif defined(PROFILE)
   Profiling::finished();
   #endif
+
+#if (defined TM)
+	std::cout << "Map contains: \n Key\tSEQ\tTM\n";
+
+	for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+	{
+		std::cout << memIter->first <<'\n';
+	}
+		std::cout << "Sequential\n";
+	for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+	{
+		std::cout << memIter->second[0] << '\n';
+	}
+	std::cout << "Transactional\n";
+	for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+	{
+		std::cout << memIter->second[1]<< '\n';
+	}
+#endif
 
   delete osSim;
 
