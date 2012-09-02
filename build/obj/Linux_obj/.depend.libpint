@@ -1,8 +1,0 @@
-
-$(OBJ)/libpint.a:$(OBJ)/PPCDecoder.o
-$(OBJ)/PPCDecoder.o: /home/hughes/simulators/sesc/sesc-power/src/libpint/PPCDecoder.cpp $(SRC_DIR)/libsuc/nanassert.h /home/hughes/simulators/sesc/sesc-power/src/libpint/PPCDecoder.h /home/hughes/simulators/sesc/sesc-power/src/libpint/PPCInsts.def /home/hughes/simulators/sesc/sesc-power/src/libpint/PPCOpcodes.h $(SRC_DIR)/libll/InstType.h
-
-
-
-
-

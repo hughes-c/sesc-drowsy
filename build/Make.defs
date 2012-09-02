@@ -18,9 +18,9 @@ CP=cp
 
 #path variables
 
-BUILD_DIR =/home/hughes/simulators/sesc/sesc-power/debug
-SRC_DIR   =/home/hughes/simulators/sesc/sesc-power/debug/../src
-TOPSRC_DIR=/home/hughes/simulators/sesc/sesc-power/debug/..
+BUILD_DIR =/home/hughes/Research/sesc-power/debug
+SRC_DIR   =/home/hughes/Research/sesc-power/debug/../src
+TOPSRC_DIR=/home/hughes/Research/sesc-power/debug/..
 OBJ_DIR   =$(BUILD_DIR)/obj
 
 #trick for having all the .depend files in the same directory
@@ -52,7 +52,7 @@ DEBUG=1
 #SESC_BAAD=1
 
 #SESC_SESCTHERM=1
-SESC_THERM=1
+#SESC_THERM=1
 #CONDOR_LINK=1
 #TRACE_DRIVEN=1
 #SESC_RSTTRACE=1

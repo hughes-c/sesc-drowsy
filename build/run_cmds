@@ -1,0 +1,5 @@
+DEBUG:
+-dresults/debugging -k131072 -c power.conf ${BENCHDIR}water-spatial.mips.tm < ${BENCHDIR}water-spatial.input.8p > ${OUTPUT_DIR}/output
+
+RUN:
+-k131072 -c power.conf ${BENCHDIR}water-spatial.mips.tm < ${BENCHDIR}water-spatial.input.8p 
