@@ -7,6 +7,7 @@
 *.o
 *.so
 *.a
+build/
 
 # Packages #
 ############
@@ -34,4 +35,5 @@ ehthumbs.db
 Icon?
 Thumbs.db
 *kdev*
+*~
 
