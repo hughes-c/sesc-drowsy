@@ -1,4 +1,4 @@
-/* 
+/*
    SESC: Super ESCalar simulator
    Copyright (C) 2003 University of Illinois.
 
@@ -121,22 +121,35 @@ int main(int argc, char**argv, char **envp)
   #endif
 
 #if (defined TM)
-	std::cout << "Map contains: \n Key\tSEQ\tTM\n";
+//    std::cout << "Map contains: \n Key\tSEQ\tTM\n";
+//
+//    for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+//    {
+//          std::cout << memIter->first <<'\n';
+//    }
+//          std::cout << "Sequential\n";
+//    for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+//    {
+//          std::cout << memIter->second[0] << '\n';
+//    }
+//    std::cout << "Transactional\n";
+//    for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+//    {
+//          std::cout << memIter->second[1]<< '\n';
+//    }
 
-	for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
-	{
-		std::cout << memIter->first <<'\n';
-	}
-		std::cout << "Sequential\n";
-	for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
-	{
-		std::cout << memIter->second[0] << '\n';
-	}
-	std::cout << "Transactional\n";
-	for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
-	{
-		std::cout << memIter->second[1]<< '\n';
-	}
+
+   std::cout << "Map contains: \n Key,SEQ,TM\n";
+
+   for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+   {
+         std::cout << memIter->first << ",";
+         std::cout << memIter->second[0] << ",";
+         std::cout << memIter->second[1];
+         std::cout << "\n";
+   }
+
+
 #endif
 
   delete osSim;
