@@ -1,4 +1,4 @@
-/* 
+/*
    SESC: Super ESCalar simulator
    Copyright (C) 2003 University of Illinois.
 
@@ -261,8 +261,10 @@ void Processor::advanceClock()
   clockTicks++;
 //   std::cout << "PROC(" << Id << "):  " << clockTicks << "\t-    ";
 
+#if defined(SEP_DVFS)
   global_stateCycles[get_executeState()] = global_stateCycles[get_executeState()] + 1;
   proc_stateCycles[Id][get_executeState()] = proc_stateCycles[Id][get_executeState()] + 1;
+#endif
 
 //   for(size_t counter = 0; counter < NUM_STATES; counter++)
 //   {

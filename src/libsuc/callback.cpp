@@ -1,4 +1,4 @@
-/* 
+/*
    SESC: Super ESCalar simulator
    Copyright (C) 2003 University of Illinois.
 
@@ -25,10 +25,12 @@ EventScheduler::TimedCallbacksQueue EventScheduler::cbQ(32);
 
 Time_t globalClock = 0;
 
+#if defined(SEP_DVFS)
 Time_t global_stateCycles[NUM_STATES];
 Time_t proc_stateCycles[256][NUM_STATES];
 
 Time_t proc_gateCycles[256][NUM_STATES];
+#endif
 
 void EventScheduler::dump() const
 {

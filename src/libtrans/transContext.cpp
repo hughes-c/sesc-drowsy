@@ -25,7 +25,7 @@
 /**
  * @ingroup transContext
  * @brief   Default constructor
- * 
+ *
  */
 transactionContext::transactionContext()
 {
@@ -153,8 +153,11 @@ void transactionContext::beginTransaction(thread_ptr pthread, icode_ptr picode)
      stallInstruction(pthread, picode, stall);
 
      size_t procID = pthread->getPid();
+
+#if defined(TRANS_DVFS)
      size_t executeState =  transGCM->prPointer->at(procID)->get_executeState();
      proc_gateCycles[procID][executeState] = proc_gateCycles[procID][executeState] + stall;
+#endif
 
      pthread->setPCIcode(nackInstruction);
      delete(this);
@@ -171,7 +174,7 @@ void transactionContext::beginTransaction(thread_ptr pthread, icode_ptr picode)
 /**
  * @ingroup transContext
  * @brief   Aborts a transaction
- * 
+ *
  * @param pthread SESC thread pointer
  */
 void transactionContext::abortTransaction(thread_ptr pthread)
@@ -215,7 +218,7 @@ void transactionContext::abortTransaction(thread_ptr pthread)
 /**
  * @ingroup transContext
  * @brief   Commits a transaction
- * 
+ *
  * @param pthread SESC thread pointer SESC thread pointer
  * @param picode Instruction code
  */
@@ -312,7 +315,7 @@ void transactionContext::cacheLW(thread_ptr pthread, icode_ptr picode, RAddr rad
     case NACK:
       pthread->tmNacking = 1;
       stallInstruction(pthread,picode,nackStallCycles);
-      break;      
+      break;
     case ABORT:
       pthread->tmNacking = 0;
       abortTransaction(pthread);
@@ -365,7 +368,7 @@ void transactionContext::cacheLUH(thread_ptr pthread, icode_ptr picode, RAddr ra
 /**
  * @ingroup transContext
  * @brief   load half word from TM cache
- * 
+ *
  * @param pthread SESC thread pointer
  * @param picode  Instruction code
  * @param raddr   Real address
@@ -477,7 +480,7 @@ void transactionContext::cacheLWFP(thread_ptr pthread, icode_ptr picode, RAddr r
     case NACK:
       pthread->tmNacking = 1;
       stallInstruction(pthread,picode,nackStallCycles);
-      break;      
+      break;
     case ABORT:
       pthread->tmNacking = 0;
       abortTransaction(pthread);
@@ -531,7 +534,7 @@ void transactionContext::cacheLDFP(thread_ptr pthread, icode_ptr picode, RAddr r
 /**
  * @ingroup transContext
  * @brief   store byte to TM cache
- * 
+ *
  * @param pthread SESC thread pointer
  * @param picode  Instruction code
  * @param raddr   Real address
@@ -545,7 +548,7 @@ void transactionContext::cacheSB(thread_ptr pthread, icode_ptr picode, RAddr rad
     case NACK:
       pthread->tmNacking = 1;
       stallInstruction(pthread,picode,nackStallCycles);
-      break;      
+      break;
     case ABORT:
       pthread->tmNacking = 0;
       abortTransaction(pthread);
@@ -579,7 +582,7 @@ void transactionContext::cacheSHW(thread_ptr pthread, icode_ptr picode, RAddr ra
     case NACK:
       pthread->tmNacking = 1;
       stallInstruction(pthread,picode,nackStallCycles);
-      break;      
+      break;
     case ABORT:
       pthread->tmNacking = 0;
       abortTransaction(pthread);
@@ -613,7 +616,7 @@ void transactionContext::cacheSW(thread_ptr pthread, icode_ptr picode, RAddr rad
     case NACK:
       pthread->tmNacking = 1;
       stallInstruction(pthread,picode,nackStallCycles);
-      break;      
+      break;
     case ABORT:
       pthread->tmNacking = 0;
       abortTransaction(pthread);
@@ -633,7 +636,7 @@ void transactionContext::cacheSW(thread_ptr pthread, icode_ptr picode, RAddr rad
 /**
  * @ingroup transContext
  * @brief   store single prec floating point to TM cache
- * 
+ *
  * @param pthread SESC thread pointer
  * @param picode  Instruction code
  * @param raddr   Real address
@@ -828,7 +831,7 @@ void transactionContext::stallInstruction(thread_ptr pthread, icode_ptr picode, 
 /**
  * @ingroup transContext
  * @brief   Stalls a thread for a given period
- * 
+ *
  * @param pthread SESC thread pointer
  * @param stallLength Length of stall
  */

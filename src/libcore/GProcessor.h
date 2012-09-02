@@ -1,4 +1,4 @@
-/* 
+/*
    SESC: Super ESCalar simulator
    Copyright (C) 2003 University of Illinois.
 
@@ -48,10 +48,12 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "boost/tuple/tuple.hpp"
 #endif
 
+#if defined(SEP_DVFS)
 extern Time_t global_stateCycles[NUM_STATES];
 extern Time_t proc_stateCycles[256][NUM_STATES];
 
 extern Time_t proc_gateCycles[256][NUM_STATES];
+#endif
 
 
 class FetchEngine;
@@ -235,7 +237,7 @@ public:
   // Returns the context of thread pid
   // when called, the processor must be running thread pid
   virtual ThreadContext *getThreadContext(Pid_t pid)=0;
-  
+
   // Stores the context of thread pid into Threads
   // When called, the processor must be running thread  pid
   virtual void saveThreadContext(Pid_t pid)=0;
@@ -261,7 +263,7 @@ public:
   virtual void switchOut(Pid_t pid) = 0;
   virtual long long getAndClearnGradInsts(Pid_t pid)  = 0; // Must be called only by RunningProcs
   virtual long long getAndClearnWPathInsts(Pid_t pid) = 0; // Must be called only by RunningProcs
-  
+
   // Returns the number of extra threads (switchIn) that processor may accept
   virtual size_t availableFlows() const = 0;
 
@@ -294,7 +296,7 @@ public:
 #if (defined TM)
   long long unsigned instCountTM;
 #endif
-  
+
 };
 
 #endif   // GPROCESSOR_H
