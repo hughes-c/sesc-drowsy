@@ -44,11 +44,18 @@ int rsesc_become_safe(int pid);
 #endif
 
 #if (defined TM)
-bool seqential;
+#include "memInfo.h"
+#include "memAccesses.h"
 
 //mem tests -- kelly
-extern std::map<RAddr, std::vector<size_t> > memAccesses;
-extern std::map<RAddr, std::vector<size_t> >::const_iterator memIter;
+bool sequential;
+
+//extern std::map<RAddr, std::vector<size_t> > memAccesses;
+//extern std::map<RAddr, std::vector<size_t> >::const_iterator memIter;
+
+extern std::map<RAddr, memInfo > memAccesses;
+extern std::map<RAddr, memInfo >::const_iterator memIter;
+
 #endif
 
 /* opcode functions in alphabetical order (more or less) */
@@ -469,7 +476,7 @@ M4_BREAD(lb_op, pthread->getREG(picode, RT),
 
   if(pthread->tmDepth > 0)
   {
-      seqential = 0;            //tx
+      sequential = 0;            //tx
 
     ID(
 
@@ -492,30 +499,12 @@ M4_BREAD(lb_op, pthread->getREG(picode, RT),
   }
   else
   {
-    seqential = 1;
+    sequential = 1;
     pthread->setREG(picode, RT, (int) *(signed char *) raddr);
   }
+  
+   memAccessFunc(raddr, sequential);
 
-   memIter =  memAccesses.find(raddr);
-
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
 
 #else
     /* read value from memory */
@@ -544,7 +533,7 @@ M4_BREAD(lbu_op, pthread->getREG(picode, RT),
   if(pthread->tmDepth > 0)
   {
        
-       seqential = 0;
+       sequential = 0;
 
     ID(
 
@@ -570,29 +559,10 @@ M4_BREAD(lbu_op, pthread->getREG(picode, RT),
 {
     pthread->setREG(picode, RT, (int) *(unsigned char *) raddr);
     
-    seqential = 1;
+    sequential = 1;
 }
 
-   memIter =  memAccesses.find(raddr);
-
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
 #else
 
     /* read value from memory */
@@ -625,7 +595,7 @@ M4_DREAD(ldc1_op, pthread->getDP(picode, ICODEFT),
   if(pthread->tmDepth > 0)
   {
       
-      seqential = 0;
+      sequential = 0;
 
     ID(
 
@@ -658,29 +628,10 @@ M4_DREAD(ldc1_op, pthread->getDP(picode, ICODEFT),
 {
     pthread->setDPFromMem(picode, ICODEFT, (double *) raddr);
     
-    seqential = 1;
+    sequential = 1;
 }
 
-   memIter =  memAccesses.find(raddr);
-
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
 #else
   
     /* read value from memory */
@@ -723,7 +674,7 @@ M4_SREAD(lh_op, pthread->getREG(picode, RT),
   if(pthread->tmDepth > 0)
   {
        
-       seqential = 0;
+       sequential = 0;
 
     ID(
        if(pthread->tmDebugTrace){
@@ -751,7 +702,7 @@ M4_SREAD(lh_op, pthread->getREG(picode, RT),
   }
   else{
    
-   seqential = 1;
+   sequential = 1;
       
 
 #ifdef LENDIAN
@@ -766,26 +717,8 @@ M4_SREAD(lh_op, pthread->getREG(picode, RT),
  pthread->setREG(picode, RT, (int ) *(signed short *) raddr);
 #endif
 }
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
   
 #else
   
@@ -830,7 +763,7 @@ M4_SREAD(lhu_op, pthread->getREG(picode, RT),
   if(pthread->tmDepth > 0)
   {
     
-    seqential = 0;
+    sequential = 0;
 
     ID(
        if(pthread->tmDebugTrace){
@@ -854,32 +787,14 @@ M4_SREAD(lhu_op, pthread->getREG(picode, RT),
   }
   else{
     
-    seqential = 1;
+    sequential = 1;
 
     pthread->setREG(picode, RT, (int ) *(unsigned short *) raddr);
     pthread->setREG(picode, RT, SWAP_SHORT(pthread->getREG(picode, RT)));
   }
 
-memIter =  memAccesses.find(raddr);
-
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
+   
 #else
 
   pthread->setREG(picode, RT, (int ) *(unsigned short *) raddr);
@@ -935,7 +850,7 @@ M4_READ(lw_op, pthread->getREG(picode, RT),
 #if (defined TM)
   if (pthread->tmDepth > 0){
        
-       seqential = 0;
+       sequential = 0;
 
     ID(
        if(pthread->tmDebugTrace){
@@ -958,30 +873,13 @@ M4_READ(lw_op, pthread->getREG(picode, RT),
   else
     {
     
-    seqential = 1;
+    sequential = 1;
 
     pthread->setREGFromMem(picode, RT, (int *) raddr);
     }   
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
+       
 #else  
   /* read value from memory */
   pthread->setREGFromMem(picode, RT, (int *) raddr);
@@ -1013,7 +911,7 @@ M4_FREAD(lwc1_op, pthread->getFP(picode, ICODEFT),
 
  if (pthread->tmDepth > 0){
       
-      seqential = 0;
+      sequential = 0;
 
     ID(  
       if(pthread->tmDebugTrace){
@@ -1041,7 +939,7 @@ M4_FREAD(lwc1_op, pthread->getFP(picode, ICODEFT),
   else
     {
     
-    seqential = 1;
+    sequential = 1;
 
     pthread->setFPFromMem(picode, ICODEFT, (float *) raddr);
     }
@@ -1049,26 +947,9 @@ M4_FREAD(lwc1_op, pthread->getFP(picode, ICODEFT),
 
 
 }
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
+   memAccessFunc(raddr, sequential);
 
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
 #else
   /* read value from memory */
   pthread->setFPFromMem(picode, ICODEFT, (float *) raddr);
@@ -1190,7 +1071,7 @@ M4_WRITE(sb_op,
   if(pthread->tmDepth > 0)
   {
        
-       seqential = 0;
+       sequential = 0;
 
     ID(
 
@@ -1216,30 +1097,13 @@ M4_WRITE(sb_op,
   else
     {
     
-    seqential = 1;
+    sequential = 1;
 
     *(char *) raddr = pthread->getREG(picode, RT);
     }
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
+       
 #else
   
   *(char *) raddr = pthread->getREG(picode, RT);
@@ -1310,7 +1174,7 @@ M4_WRITE(sdc1_op,
   if(pthread->tmDepth > 0)
   {
       
-      seqential = 0;
+      sequential = 0;
 
     ID(
 
@@ -1330,30 +1194,13 @@ M4_WRITE(sdc1_op,
   else
   {
     
-    seqential = 1;
+    sequential = 1;
 
     *((double *)raddr)=*((double *)&v1);
   }
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
+     
 #else
 
   *((double *)raddr)=*((double *)&v1);
@@ -1400,7 +1247,7 @@ M4_WRITE(sh_op,
   if(pthread->tmDepth > 0)
   {
        
-       seqential = 0;
+       sequential = 0;
 
     ID(
 
@@ -1426,30 +1273,13 @@ M4_WRITE(sh_op,
   else
   {
     
-    seqential = 1;
+    sequential = 1;
 
     *(unsigned short *) raddr = SWAP_SHORT(pthread->getREG(picode, RT));
   } 
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
+     
 #else
     
     /* write value to memory */
@@ -1547,7 +1377,7 @@ M4_WRITE(sw_op,
 #if (defined TM)
   if(pthread->tmDepth > 0){
       
-      seqential = 0;
+      sequential = 0;
 
     ID(
 
@@ -1572,30 +1402,13 @@ M4_WRITE(sw_op,
   else
   {
     
-    seqential = 1;
+    sequential = 1;
 
     *(unsigned int *) raddr = SWAP_WORD(pthread->getREG(picode, RT));
   }
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
+     
 #else
   
     /* write value to memory */
@@ -1638,7 +1451,7 @@ M4_WRITE(swc1_op,
 #if (defined TM)
   if(pthread->tmDepth > 0){
        
-       seqential = 0;
+       sequential = 0;
 
     ID(
 
@@ -1662,29 +1475,11 @@ M4_WRITE(swc1_op,
   else
   {
     
-    seqential = 1;
+    sequential = 1;
 
   }
-memIter =  memAccesses.find(raddr);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
-   {
-      //create two entries in the vector -- 0 for seq, 1 for trans
-      memAccesses[raddr].push_back(0);
-      memAccesses[raddr].push_back(0);
-
-      if(seqential == true)
-         memAccesses[raddr][0] = 1;
-      else
-         memAccesses[raddr][1] = 1;
-   } 
-   else                                         //Otherwise it already exists somewhere
-   {
-      if(seqential == true)
-         memAccesses[raddr][0] = memAccesses[raddr][0] + 1;
-      else
-         memAccesses[raddr][1] = memAccesses[raddr][1] + 1;
-   }
+   memAccessFunc(raddr, sequential);
 
   
 #else

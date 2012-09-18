@@ -41,9 +41,15 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #if (defined TM)
 
+#include "memInfo.h"
+
+
 //mem tests -- kelly
-std::map<RAddr, std::vector<size_t> > memAccesses;
-std::map<RAddr, std::vector<size_t> >::const_iterator memIter;
+// std::map<RAddr, std::vector<size_t> > memAccesses;
+// std::map<RAddr, std::vector<size_t> >::const_iterator memIter;
+
+std::map<RAddr, memInfo > memAccesses;
+std::map<RAddr, memInfo >::const_iterator memIter;
 
 #include "transReport.h"
 #include "transCoherence.h"
@@ -121,34 +127,18 @@ int main(int argc, char**argv, char **envp)
   #endif
 
 #if (defined TM)
-//    std::cout << "Map contains: \n Key\tSEQ\tTM\n";
-//
-//    for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
-//    {
-//          std::cout << memIter->first <<'\n';
-//    }
-//          std::cout << "Sequential\n";
-//    for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
-//    {
-//          std::cout << memIter->second[0] << '\n';
-//    }
-//    std::cout << "Transactional\n";
-//    for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
-//    {
-//          std::cout << memIter->second[1]<< '\n';
-//    }
-
-
    std::cout << "Map contains: \n Key,SEQ,TM\n";
 
-   for (memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
+   for(memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
    {
-         std::cout << memIter->first << ",";
-         std::cout << memIter->second[0] << ",";
-         std::cout << memIter->second[1];
-         std::cout << "\n";
+      std::cout << memIter->first << ",";
+      
+      for(size_t binSize = 0; binSize < 10; binSize++)
+      {
+         std::cout << memIter->second.memBins[binSize] << ",";
+      }
+      std::cout << "\n";
    }
-
 
 #endif
 
