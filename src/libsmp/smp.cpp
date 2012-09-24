@@ -43,11 +43,6 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include "memInfo.h"
 
-
-//mem tests -- kelly
-// std::map<RAddr, std::vector<size_t> > memAccesses;
-// std::map<RAddr, std::vector<size_t> >::const_iterator memIter;
-
 std::map<RAddr, memInfo > memAccesses;
 std::map<RAddr, memInfo >::const_iterator memIter;
 
@@ -127,13 +122,14 @@ int main(int argc, char**argv, char **envp)
   #endif
 
 #if (defined TM)
-   std::cout << "Map contains: \n Key,SEQ,TM\n";
+   std::cout << "Map contains: \n Key,Last SEQ, Last TX, Num_SEQ, Num_TM";
+   std::cout << "0-2,3-4,5-8,9-16,17-32,33-64,65-128,>128\n";
 
    for(memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
    {
       std::cout << memIter->first << ",";
-      
-      for(size_t binSize = 0; binSize < 10; binSize++)
+
+      for(size_t binSize = 0; binSize < 12; binSize++)
       {
          std::cout << memIter->second.memBins[binSize] << ",";
       }
