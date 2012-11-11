@@ -63,7 +63,7 @@ void memAccessFunc(RAddr raddrIn, bool sequentialIn)
    size_t bin;
    memIter =  memAccesses.find(raddrIn);
 
-   if(memIter == memAccesses.end())             //If at the end of the map, then it does not exist & need to create new
+   if(memIter == memAccesses.end())                    //If at the end of the map, then it does not exist & need to create new
    {
       //create new vecotr of size DR_SIZE
       memAccesses[raddrIn].memBins.resize(DR_SIZE, 0);
@@ -79,16 +79,16 @@ void memAccessFunc(RAddr raddrIn, bool sequentialIn)
          memAccesses[raddrIn].memBins[NUM_TXM] = memAccesses[raddrIn].memBins[NUM_TXM] + 1;
       }
    }
-   else                                         //Otherwise it already exists somewhere
+   else                                                //Otherwise it already exists somewhere
    {
       if(sequentialIn == true)
       {
-         if(memAccesses[raddrIn].memBins[1] >= 1)	//If Prev==T and Curr==S
+         if(memAccesses[raddrIn].memBins[1] >= 1)      //If Prev==T and Curr==S
          {
             bin = binNumber(globalClock - memAccesses[raddrIn].lastClock);
             memAccesses[raddrIn].memBins[bin] = memAccesses[raddrIn].memBins[bin] + 1;
 
-            memAccesses[raddrIn].memBins[0] = 1;		//update for next reference
+            memAccesses[raddrIn].memBins[0] = 1;       //update for next reference
             memAccesses[raddrIn].memBins[1] = 0;
          }
 

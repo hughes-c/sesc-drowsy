@@ -43,6 +43,9 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include "memInfo.h"
 
+#define NUM_SEQ 2
+#define NUM_TXM 3
+
 std::map<RAddr, memInfo > memAccesses;
 std::map<RAddr, memInfo >::const_iterator memIter;
 
@@ -122,19 +125,51 @@ int main(int argc, char**argv, char **envp)
   #endif
 
 #if (defined TM)
-   std::cout << "Map contains: \n Key,Last SEQ, Last TX, Num_SEQ, Num_TM";
-   std::cout << "0-2,3-4,5-8,9-16,17-32,33-64,65-128,>128\n";
+   uint32_t totalSeq = 0;
+   uint32_t totalTM = 0;
+   uint32_t totalShared = 0;
+   uint32_t memBins[8] = {0};
+
+//    std::cout << "Map contains: \n Key,Last SEQ, Last TX, Num_SEQ, Num_TM";
+//    std::cout << "0-2,3-4,5-8,9-16,17-32,33-64,65-128,>128\n";
 
    for(memIter = memAccesses.begin(); memIter != memAccesses.end(); memIter++)
    {
-      std::cout << memIter->first << ",";
+      totalSeq = totalSeq + memIter->second.memBins[NUM_SEQ];
+      totalTM = totalTM + memIter->second.memBins[NUM_TXM];
 
-      for(size_t binSize = 0; binSize < 12; binSize++)
+      if(memIter->second.memBins[NUM_SEQ] > 0 && memIter->second.memBins[NUM_TXM] > 0)
       {
-         std::cout << memIter->second.memBins[binSize] << ",";
+         totalShared = totalShared + 1;
+
+         for(size_t binSize = 0; binSize < 8; binSize++)
+         {
+            memBins[binSize] = memBins[binSize] + memIter->second.memBins[binSize + 4];
+         }
+
       }
-      std::cout << "\n";
+
+//       std::cout << memIter->first << ",";
+//
+//       for(size_t binSize = 0; binSize < 12; binSize++)
+//       {
+//          std::cout << memIter->second.memBins[binSize] << ",";
+//       }
+//       std::cout << "\n";
    }
+
+   std::cout << "\n";
+   std::cout << "TotalSeq:  " << totalSeq << "\n";
+   std::cout << "TotalTm:   " << totalTM << "\n";
+   std::cout << "TotalSh:   " << totalShared << "\n";
+
+   std::cout << "\n";
+   std::cout << "0-2,3-4,5-8,9-16,17-32,33-64,65-128,>128\n";
+   for(size_t binSize = 0; binSize < 8; binSize++)
+   {
+      std::cout << memBins[binSize] << ",";
+   }
+   std::cout << "\n";
 
 #endif
 
