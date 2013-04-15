@@ -42,14 +42,14 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #ifdef SESC_ENERGY
 
 //Compile with DVFS support -- enabled in trans.conf
-#define SEP_DVFS
+//#define SEP_DVFS
 
 //Enable debugging print outs
 #define DVFS_DEBUG 0
 
 // #define CONFLICT_DEBUG
 
-//Number of DVFS states (see below)
+//Number of DVFS states (see below -- 16)
 #define NUM_STATES 16
 
 //0-3.73, 1-3.47, 2-3.20, 3-2.93, 4-2.67, 5-2.40, 6-2.27, 7-2.13, 8-2.00, 9-1.87, 10-1.73, 11-1.60, 12-1.47, 13-1.33, 14-1.20, 15-1.07

@@ -336,7 +336,6 @@ testsim-tls: sesc sesc.conf
 endif
 
 sharedclean:
-	-@rm -f power.conf
 	-@rm -f $(EXECS)
 	-@rm -f wattchify cactify
 	-@rm -f $(OBJ)/mkdep

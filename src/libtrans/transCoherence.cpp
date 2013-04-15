@@ -35,6 +35,7 @@ transCoherence::transCoherence()
 {
 }
 
+
 /**
  * @ingroup transCoherence
  * @brief   Constructor
@@ -148,7 +149,7 @@ transCoherence::transCoherence(FILE* out, int conflicts, int versioning, int cac
 /**
  * @ingroup transCoherence
  * @brief   Create new cache state reference with Read bit set
- *
+ * 
  * @param pid   Process ID
  * @return     Cache state
  */
@@ -163,7 +164,7 @@ struct cacheState transCoherence::newReadState(int pid)
 /**
  * @ingroup transCoherence
  * @brief   Create new cache state reference with Write bit set
- *
+ * 
  * @param pid   Process ID
  * @return Cache state
  */
@@ -178,7 +179,7 @@ struct cacheState transCoherence::newWriteState(int pid)
 /**
  * @ingroup transCoherence
  * @brief check to see if thread has been ordered to abort
- *
+ * 
  * @param pid Process ID
  * @param tid Thread ID
  * @return Abort?
@@ -202,7 +203,7 @@ bool transCoherence::checkAbort(int pid, int tid)
 /**
  * @ingroup transCoherence
  * @brief   eager eager read
- *
+ * 
  * @param pid   Process ID
  * @param tid   Thread ID
  * @param raddr Real address
@@ -267,7 +268,7 @@ GCMRet transCoherence::readEE(int pid, int tid, RAddr raddr)
 /**
  * @ingroup transCoherence
  * @brief   eager eager write
- *
+ * 
  * @param pid   Process ID
  * @param tid   Thread ID
  * @param raddr Real address
@@ -375,7 +376,7 @@ GCMRet transCoherence::writeEE(int pid, int tid, RAddr raddr)
 /**
  * @ingroup transCoherence
  * @brief   eager eager begin
- *
+ * 
  * @param pid   Process ID
  * @param picode Instruction code
  * @return  Final coherency status
@@ -523,7 +524,7 @@ GCMFinalRet transCoherence::beginEE(int pid, icode_ptr picode)
 /**
  * @ingroup transCoherence
  * @brief   eager eager abort
- *
+ * 
  * @param pthread SESC pointer to thread
  * @param tid    Thread ID
  * @return Final coherency status
@@ -563,7 +564,7 @@ struct GCMFinalRet transCoherence::abortEE(thread_ptr pthread, int tid)
 /**
  * @ingroup transCoherence
  * @brief   eager eager commit
- *
+ * 
  * @param pid   Process ID
  * @param tid    Thread ID
  * @return Final coherency status
@@ -671,7 +672,7 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
  **************************************/
 
 /*
-  * The Read function is much simpler in the Lazy approach since
+  * The Read function is much simpler in the Lazy approach since 
   * we do not have to worry about conflict detection.  We always
   * permit accecss and simply record the information.
 */
@@ -679,7 +680,7 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
 /**
  * @ingroup transCoherence
  * @brief   lazy lazy read
- *
+ * 
  * @param pid   Process ID
  * @param tid    Thread ID
  * @param raddr  Real address
@@ -726,7 +727,7 @@ GCMRet transCoherence::readLL(int pid, int tid, RAddr raddr)
 
 
 /*
-  * The Write function is much simpler in the Lazy approach since
+  * The Write function is much simpler in the Lazy approach since 
   * we do not have to worry about conflict detection.  We always
   * permit accecss and simply record the information.
 */
@@ -734,7 +735,7 @@ GCMRet transCoherence::readLL(int pid, int tid, RAddr raddr)
 /**
  * @ingroup transCoherence
  * @brief   lazy lazy write
- *
+ * 
  * @param pid   Process ID
  * @param tid    Thread ID
  * @param raddr Real address
@@ -781,7 +782,7 @@ GCMRet transCoherence::writeLL(int pid, int tid, RAddr raddr)
 /**
  * @ingroup transCoherence
  * @brief lazy lazy begin
- *
+ * 
  * @param pid   Process ID
  * @param picode SESC icode pointer
  * @return Final coherency status
@@ -911,7 +912,7 @@ GCMFinalRet transCoherence::beginLL(int pid, icode_ptr picode)
 /**
  * @ingroup transCoherence
  * @brief lazy lazy abort
- *
+ * 
  * @param pthread SESC thread pointer
  * @param tid    Thread ID
  * @return Final coherency status
@@ -952,7 +953,7 @@ struct GCMFinalRet transCoherence::abortLL(thread_ptr pthread, int tid)
 /**
  * @ingroup transCoherence
  * @brief lazy lazy commit
- *
+ * 
  * @param pid   Process ID
  * @param tid    Thread ID
  * @return Final coherency status
@@ -1102,8 +1103,8 @@ struct GCMFinalRet transCoherence::commitLL(int pid, int tid)
 ///-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *
- * @param processElement
+ * 
+ * @param processElement 
  */
 void transCoherence::releaseNackedPE(int processElement)
 {
@@ -1116,19 +1117,16 @@ void transCoherence::releaseNackedPE(int processElement)
       if(get_nackArray(counter) == processElement)
       {
          std::cout << "Release " << counter << " by " << processElement << "\n";
-
-#if defined(TRANS_DVFS)
          transGCM->prPointer->at(counter)->set_executeState(DEFAULT_DVFS);
-#endif
       }
    }
 }
 
 /**
- *
- * @param procID
- * @param state
- * @return
+ * 
+ * @param procID 
+ * @param state 
+ * @return 
  */
 bool transCoherence::set_nackArray(int procID, int state)
 {
@@ -1144,9 +1142,9 @@ bool transCoherence::set_nackArray(int procID, int state)
 }
 
 /**
- *
- * @param procID
- * @return
+ * 
+ * @param procID 
+ * @return 
  */
 int transCoherence::get_nackArray(int procID)
 {
