@@ -139,7 +139,6 @@ void Processor::goRabbitMode(long long n2Skip)
 }
 
 
-
 void Processor::advanceClock()
 {
 #ifdef SESC_ENERGY
