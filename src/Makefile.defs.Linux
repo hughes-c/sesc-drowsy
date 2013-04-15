@@ -53,8 +53,10 @@ COPTS	:= -O0 -ggdb -fno-inline-functions $(PDEFS)
 LOPTS	+= -O0 -ggdb
 else
 # -fast does not work by default. Disable some opts
-COPTS	:=-O3
-LOPTS	:=-O2
+COPTS   :=-O0 -fno-inline-functions     
+LOPTS   :=-O0 -fno-inline-functions
+# COPTS	:=-O3
+# LOPTS	:=-O2
 endif # DEBUG
 endif # PERFORMANCE
 
