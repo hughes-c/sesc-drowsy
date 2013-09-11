@@ -91,6 +91,7 @@ void MESIProtocol::read(MemRequest *mreq)
   // time for this has already been accounted in SMPCache::read
   Line *l = pCache->getLine(addr);
 
+
   // if line is in transient state, read should not have been called
   GI(l, !l->isLocked()); 
 

@@ -24,7 +24,7 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #ifndef CALLBACK_H
 #define CALLBACK_H
 /////////////////////////////////////////////////////////////////////////////
-
+#include <iostream>
 #include <vector>               // std::vector<>
 #include <algorithm>            // std::find()
 
@@ -33,6 +33,9 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include "TQueue.h"
 #include "Snippets.h"
+
+ extern bool isAwake;
+
 
 #if defined(__sgi) && !defined(__GNUC__)
 #pragma set woff 1681
@@ -140,6 +143,13 @@ public:
       cb->call();
     }
     globalClock++;
+    //GLOBAL CLOCK INCREMENTS HERE
+   if(globalClock%2000==0)
+    	{isAwake=false;
+	   //all my awakes need to go to false
+   std::cout<<globalClock<<std::endl;
+    	};
+
   }
 
   static bool empty() {

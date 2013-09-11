@@ -332,18 +332,15 @@ void GStatsEnergy::dump(int procId)
          pVals[e->getGid()] += EnergyMgr::etop(e->getDouble(), proc_stateCycles[procId][myState] - 1, myFrequency);
       else
          pVals[e->getGid()] += EnergyMgr::etop(e->getDouble());
-      
-      size_t debugging = 0;
+size_t debugging = 0;
       if(debugging == 1)
       {
          std::cout << procId << " - " << myState << ":  ";
          std::cout << std::setw(48) << e->name << std::setw(16) << e->getDouble() << std::setw(18) << proc_stateCycles[procId][myState] << std::setw(14) << myFrequency << std::setw(18);
-         
          if(proc_stateCycles[procId][myState] > 0)
             std::cout << EnergyMgr::etop(e->getDouble(), proc_stateCycles[procId][myState] - 1, myFrequency);
          else
             std::cout << EnergyMgr::etop(e->getDouble());
-         
          std::cout <<  "        " << pVals[e->getGid()] << std::endl;
       }
 
@@ -426,7 +423,7 @@ void GStatsEnergy::dumpPowerTrace(int procId, Time_t interval, std::ostream &out
       #endif
    }
 
-   // dump the values
+// dump the values
    for(int j = 1; j < ClockPower; j++)
    {
       outStream << "P:" << procId << ":" << EnergyStore::getStr(static_cast<PowerGroup>(j)) << ":" << pVals[j] << ":" <<  EnergyStore::getEnergyStr(static_cast<PowerGroup>(j)) << ":" << tempEnergy[j] <<  "\n";

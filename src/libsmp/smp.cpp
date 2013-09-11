@@ -43,6 +43,12 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "transReport.h"
 #include "transCoherence.h"
 
+  extern long cycles_asleep;//**************************************new
+  extern bool ran;
+  extern uint64_t performanceLoss;
+  extern bool awake[1024];//*********************************************new
+
+
 transReport *tmReport = 0;
 #endif
 
@@ -58,7 +64,9 @@ transReport *tmReport = 0;
 
 int main(int argc, char**argv, char **envp)
 {
-  osSim = new OSSim(argc, argv, envp);
+
+
+	osSim = new OSSim(argc, argv, envp);
 
   int nProcs = SescConf->getRecordSize("","cpucore");
 
@@ -114,7 +122,9 @@ int main(int argc, char**argv, char **envp)
   #elif defined(PROFILE)
   Profiling::finished();
   #endif
-
+//std::cout<<performanceLoss<<std::endl;
+//std::cout<<cycles_asleep<<std::endl;
+//std::cout<<globalClock<<std::endl;
   delete osSim;
 
   return 0;

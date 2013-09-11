@@ -63,6 +63,7 @@ MemCtrl::MemCtrl(MemorySystem* current, const char *device_descr_section,
 void MemCtrl::read(MemRequest *mreq)
 {
   mreq->goDown(rowAccessDelay, lowerLevel[calcBank(mreq->getPAddr())]);
+
 }
 
 void MemCtrl::returnAccess(MemRequest *mreq)
@@ -99,7 +100,8 @@ Time_t MemCtrl::getNextFreeCycle() const
 
 void MemCtrl::access(MemRequest *mreq)
 {
-  if(mreq->getMemOperation()==MemWrite)
+
+	if(mreq->getMemOperation()==MemWrite)
     write(mreq);
   else
     read(mreq);

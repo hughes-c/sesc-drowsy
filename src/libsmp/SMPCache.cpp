@@ -42,6 +42,11 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // Another important assumption is that every cache line in the memory
 // subsystem is the same size. This is not hard to fix, though. Any
 // candidates?
+//int i;
+  extern uint64_t sleepTime=0;//**************************************new
+  extern uint64_t performanceLoss=0;
+  extern bool isAwake=false;//*********************************************new
+
 
 MSHR<PAddr, SMPCache> *SMPCache::mutExclBuffer = NULL;
 
@@ -254,7 +259,17 @@ void SMPCache::doRead(MemRequest *mreq)
 {
   PAddr addr = mreq->getPAddr();
   Line *l = cache->readLine(addr);
+//**************************************************new***************
 
+  if (isAwake == false)
+{
+	isAwake = true;//line is now awake
+	sleepTime += globalClock%2000;//total cycles this line has been asleep
+	performanceLoss += 1;//keep track of how many times we had to wake up
+}
+  else
+  {/*do nothing (the line is already awake)*/};
+//*****************************************************new**************
   if (l && l->canBeRead()) {
     readHit.inc();
 #ifdef SESC_ENERGY
@@ -266,6 +281,7 @@ void SMPCache::doRead(MemRequest *mreq)
        rdEnergy[0][DEFAULT_DVFS]->inc();
 #else
     rdEnergy[0]->inc();
+
 #endif
 
 #endif
@@ -401,6 +417,21 @@ void SMPCache::doWrite(MemRequest *mreq)
   PAddr addr = mreq->getPAddr();
   Line *l = cache->writeLine(addr);
 
+  //**************************************************new***************
+
+    if (isAwake == false)
+  {
+  	isAwake = true;//line is now awake
+  	sleepTime += globalClock%2000;//total cycles this line has been asleep
+  	performanceLoss += 1;//keep track of how many times we had to wake up
+  }
+    else
+    {/*do nothing (the line is already awake)*/};
+  //*****************************************************new**************
+
+
+
+
 #ifdef SESC_ENERGY
    //NOTE This may not be valid for all cache configurations
    const LevelType* la  = getLowerLevel();
@@ -510,6 +541,18 @@ void SMPCache::invalidate(PAddr addr, ushort size, MemObj *oc)
 {
   Line *l = cache->findLine(addr);
 
+  //**************************************************new***************
+
+    if (isAwake == false)
+  {
+  	isAwake = true;//line is now awake
+  	sleepTime += globalClock%2000;//total cycles this line has been asleep
+  	performanceLoss += 1;//keep track of how many times we had to wake up
+  }
+    else
+    {/*do nothing (the line is already awake)*/};
+  //*****************************************************new**************
+
   I(oc);
   I(pendInvTable.find(addr) == pendInvTable.end());
   pendInvTable[addr].outsResps = getNumCachesInUpperLevels();
@@ -553,6 +596,18 @@ void SMPCache::doInvalidate(PAddr addr, ushort size)
 
 void SMPCache::realInvalidate(PAddr addr, ushort size, bool writeBack)
 {
+
+	//**************************************************new***************
+
+	  if (isAwake == false)
+	{
+		isAwake = true;//line is now awake
+		sleepTime += globalClock%2000;//total cycles this line has been asleep
+		performanceLoss += 1;//keep track of how many times we had to wake up
+	}
+	  else
+	  {/*do nothing (the line is already awake)*/};
+	//*****************************************************new**************
   while(size) {
 
     Line *l = cache->findLine(addr);
@@ -688,6 +743,18 @@ SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb,
   I(cache->findLineDebug(addr) == 0);
   Line *l = cache->findLine2Replace(addr);
 
+  //**************************************************new***************
+
+    if (isAwake == false)
+  {
+  	isAwake = true;//line is now awake
+  	sleepTime += globalClock%2000;//total cycles this line has been asleep
+  	performanceLoss += 1;//keep track of how many times we had to wake up
+  }
+    else
+    {/*do nothing (the line is already awake)*/};
+  //*****************************************************new**************
+
   if(!l) {
     // need to schedule allocate line for next cycle
     doAllocateLineCB::scheduleAbs(globalClock+1, this, addr, 0, cb);
@@ -745,7 +812,20 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
   // returns a line, then the line was successfully allocated, and all
   // that's left is to call the callback allocateLine has initially
   // received as a parameter
-  if(!rpl_addr) {
+
+	//**************************************************new***************
+
+	  if (isAwake == false)
+	{
+		isAwake = true;//line is now awake
+		sleepTime += globalClock%2000;//total cycles this line has been asleep
+		performanceLoss += 1;//keep track of how many times we had to wake up
+	}
+	  else
+	  {/*do nothing (the line is already awake)*/};
+	//*****************************************************new**************
+
+	if(!rpl_addr) {
     Line *l = allocateLine(addr, cb, false);
 
     if(l) {
@@ -781,12 +861,36 @@ SMPCache::Line *SMPCache::getLine(PAddr addr)
 void SMPCache::writeLine(PAddr addr) {
   Line *l = cache->writeLine(addr);
   I(l);
+
+  //**************************************************new***************
+
+    if (isAwake == false)
+  {
+  	isAwake = true;//line is now awake
+  	sleepTime += globalClock%2000;//total cycles this line has been asleep
+  	performanceLoss += 1;//keep track of how many times we had to wake up
+  }
+    else
+    {/*do nothing (the line is already awake)*/};
+  //*****************************************************new**************
 }
 
 void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack) 
 {
   Line *l = cache->findLine(addr);
   
+
+  //**************************************************new***************
+
+    if (isAwake == false)
+  {
+  	isAwake = true;//line is now awake
+  	sleepTime += globalClock%2000;//total cycles this line has been asleep
+  	performanceLoss += 1;//keep track of how many times we had to wake up
+  }
+    else
+    {/*do nothing (the line is already awake)*/};
+  //*****************************************************new**************
   I(l);
 
   I(pendInvTable.find(addr) == pendInvTable.end());

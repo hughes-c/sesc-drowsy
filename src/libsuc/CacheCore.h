@@ -60,6 +60,7 @@ template<class State, class Addr_t = uint, bool Energy=false>
   const uint  maskSets;
   const uint  numLines;
 
+
 #if defined(SEP_DVFS)
   GStatsEnergy *rdEnergy[2][NUM_STATES]; // 0 hit, 1 miss
   GStatsEnergy *wrEnergy[2][NUM_STATES]; // 0 hit, 1 miss
@@ -73,6 +74,9 @@ template<class State, class Addr_t = uint, bool Energy=false>
   public:
   class CacheLine : public State {
   public:
+
+
+
     // Pure virtual class defines interface
     //
     // Tag included in state. Accessed through:
@@ -262,7 +266,7 @@ public:
   typedef typename CacheGeneric<State, Addr_t, Energy>::CacheLine Line;
 
 protected:
- 
+
   Line *mem;
   Line **content;
   ushort irand;
@@ -370,19 +374,33 @@ class StateGeneric {
 private:
   Addr_t tag;
 
+  //drowsy
+  uint64_t sleepTime, performanceLoss;
+  bool     isAwake;
+
+
 public:
   virtual ~StateGeneric() {
     tag = 0;
   }
- 
+
+ uint64_t getSleepTime() const { return sleepTime; }
+ void setSleepTime(uint64_t timeIn) { sleepTime = timeIn; }
+
+ uint64_t getPerformanceLoss() const { return performanceLoss; }
+ void setPerformanceLoss(uint64_t perfLoss) { performanceLoss = perfLoss; }
+
+ bool getAwake() const { return isAwake; }
+ void setAwake(bool wakeyWakey) { isAwake = wakeyWakey; }
+
  Addr_t getTag() const { return tag; }
  void setTag(Addr_t a) {
    I(a);
-   tag = a; 
+   tag = a;
  }
  void clearTag() { tag = 0; }
- void initialize(void *c) { 
-   clearTag(); 
+ void initialize(void *c) {
+   clearTag();
  }
 
  virtual bool isValid() const { return tag; }

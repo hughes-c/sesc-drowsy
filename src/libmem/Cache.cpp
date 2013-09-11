@@ -42,6 +42,7 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "SMPCache.h"
 
 
+
 static const char 
   *k_numPorts="numPorts", *k_portOccp="portOccp",
   *k_hitDelay="hitDelay", *k_missDelay="missDelay";
@@ -323,6 +324,7 @@ void Cache::read(MemRequest *mreq)
 #endif
   //enforcing max ops/cycle for the specific bank
   doReadBankCB::scheduleAbs(nextBankSlot(mreq->getPAddr()), this, mreq);
+
 }
 
 void Cache::doReadBank(MemRequest *mreq)
@@ -333,6 +335,7 @@ void Cache::doReadBank(MemRequest *mreq)
 
 void Cache::doRead(MemRequest *mreq)
 {
+	//std::cout<<cache<<std::endl;
   Line *l = getCacheBank(mreq->getPAddr())->readLine(mreq->getPAddr());
 
   if (l == 0) {
@@ -358,6 +361,7 @@ void Cache::doRead(MemRequest *mreq)
       rdEnergy[0][DEFAULT_DVFS]->inc();
 #else
   rdEnergy[0]->inc();
+
 #endif
 
 #endif
@@ -533,6 +537,7 @@ void Cache::write(MemRequest *mreq)
     mshrBWHist.inc();
 #endif
   doWriteBankCB::scheduleAbs(nextBankSlot(mreq->getPAddr()), this, mreq);
+
 }
 
 void Cache::doWriteBank(MemRequest *mreq)
@@ -671,6 +676,7 @@ void Cache::doWrite(MemRequest *mreq)
 #endif
 
   mreq->goUp(hitDelay);
+
 }
 
 void Cache::writeMissHandler(MemRequest *mreq)
@@ -968,6 +974,7 @@ void Cache::doInvalidate(PAddr addr, ushort size)
 Time_t Cache::getNextFreeCycle() const // TODO: change name to calcNextFreeCycle
 {
   return cachePort->calcNextSlot();
+
 }
 
 void Cache::doWriteBack(PAddr addr)

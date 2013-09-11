@@ -37,6 +37,7 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "transReport.h"
 #endif
 
+extern bool awake[1024];//*********************************************new
 
 Processor::Processor(GMemorySystem *gm, CPU_t i)
   :GProcessor(gm, i, 1)
@@ -137,6 +138,7 @@ void Processor::goRabbitMode(long long n2Skip)
 {
   IFID.goRabbitMode(n2Skip);
 }
+
 
 
 void Processor::advanceClock()
@@ -258,6 +260,9 @@ void Processor::advanceClock()
 #endif
 
   clockTicks++;
+ // if (globalClock % 2000==0)  //this needs to go somewhere else (put all lines to sleep every 2000cc)
+ //        {for (int i = 0; i < 1025; i++)
+  //           	{awake[i]=false;}}
 //   std::cout << "PROC(" << Id << "):  " << clockTicks << "\t-    ";
 
   global_stateCycles[get_executeState()] = global_stateCycles[get_executeState()] + 1;

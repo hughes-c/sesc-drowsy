@@ -301,11 +301,14 @@ CacheAssoc<State, Addr_t, Energy>::CacheAssoc(int size, int assoc, int blksize, 
   for(uint i = 0; i < numLines; i++) {
     mem[i].initialize(this);
     mem[i].invalidate();
+   // mem[i].resetAwake();
     content[i] = &mem[i];
+    //std::cout<<mem[i]<<std::endl;
   }
-  
+  //std::cout<<mem<<std::endl;
   irand = 0;
 }
+
 
 template<class State, class Addr_t, bool Energy>
 typename CacheAssoc<State, Addr_t, Energy>::Line *CacheAssoc<State, Addr_t, Energy>::findLinePrivate(Addr_t addr)
@@ -424,6 +427,7 @@ typename CacheAssoc<State, Addr_t, Energy>::Line
   }else if(ignoreLocked) {
     if (policy == RANDOM && (*lineFree)->isValid()) {
       lineFree = &theSet[irand];
+
       irand = (irand + 1) & maskAssoc;
     }else{
       //      I(policy == LRU);
@@ -446,6 +450,7 @@ typename CacheAssoc<State, Addr_t, Energy>::Line
       Line **prev = l - 1;
       *l = *prev;;
       l = prev;
+
     }
     *theSet = tmp;
   }
@@ -454,7 +459,7 @@ typename CacheAssoc<State, Addr_t, Energy>::Line
 }
 
 /*********************************************************
- *  CacheDM
+ *  CacheDM  ---Direct Mapped
  *********************************************************/
 
 template<class State, class Addr_t, bool Energy>
@@ -465,6 +470,7 @@ CacheDM<State, Addr_t, Energy>::CacheDM(int size, int blksize, int addrUnit, con
   
   mem     = new Line[numLines + 1];
   content = new Line* [numLines + 1];
+
 
   for(uint i = 0; i < numLines; i++) {
     mem[i].initialize(this);
@@ -516,7 +522,7 @@ typename CacheDM<State, Addr_t, Energy>::Line
 }
 
 /*********************************************************
- *  CacheDMSkew
+ *  CacheDMSkew   ---Direct Mapped
  *********************************************************/
 
 template<class State, class Addr_t, bool Energy>
@@ -574,7 +580,7 @@ typename CacheDMSkew<State, Addr_t, Energy>::Line
   Line *line = content[calcIndex4Tag(tag)];
 
   if (ignoreLocked)
-    return line;
+	return line;
 
   if (line->getTag() == tag) {
     GI(tag,line->isValid());
