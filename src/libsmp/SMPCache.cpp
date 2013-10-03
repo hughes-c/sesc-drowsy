@@ -22,7 +22,7 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "SMPCache.h"
 #include "SMPCacheState.h"
 #include "Cache.h"
-
+#include "CacheCore.h"
 #include "MESIProtocol.h"
 
 // This cache works under the assumption that caches above it in the memory
@@ -42,10 +42,6 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // Another important assumption is that every cache line in the memory
 // subsystem is the same size. This is not hard to fix, though. Any
 // candidates?
-//int i;
-  extern uint64_t sleepTime=0;//**************************************new
-  extern uint64_t performanceLoss=0;
-  extern bool isAwake=false;//*********************************************new
 
 
 MSHR<PAddr, SMPCache> *SMPCache::mutExclBuffer = NULL;
@@ -241,6 +237,31 @@ void SMPCache::access(MemRequest *mreq)
    // which is what we are assuming)
 }
 
+void SMPCache::goToSleep(MemRequest *mreq)//***********************************************************
+{
+	//uint f=1;
+   // Line *theSet = cache->getPLine(f);
+	//Line *mem;
+//	Line **content= cache->getContent() ;
+//	uint addr = mreq->getPAddr();
+//	uint tag = cache->calcTag(addr);
+//    uint assoc = cache->getAssoc();
+//    uint index = cache->calcIndex4Tag(tag);
+//
+//
+//
+//    uint numLines =cache->getNumLines();
+//
+//    //mem     = new Line [numLines + 1];
+//    //content = new Line* [numLines + 1];
+//
+//    Line **theSet = &content[index];
+//
+//    Line **l = theSet + 1;
+//
+//	Line **setEnd = theSet + assoc;
+}
+
 void SMPCache::read(MemRequest *mreq)
 {
    PAddr addr = mreq->getPAddr();
@@ -261,15 +282,18 @@ void SMPCache::doRead(MemRequest *mreq)
   Line *l = cache->readLine(addr);
 //**************************************************new***************
 
-  if (isAwake == false)
-{
-	isAwake = true;//line is now awake
-	sleepTime += globalClock%2000;//total cycles this line has been asleep
-	performanceLoss += 1;//keep track of how many times we had to wake up
-}
-  else
-  {/*do nothing (the line is already awake)*/};
+//  if (l->getAwake() == false)
+//{
+//	l->setAwake(true);//line is now awake
+//	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//}
+//  else
+//  {/*do nothing (the line is already awake)*/};
 //*****************************************************new**************
+
+ //void goToSleep(MemRequest *mreq);
+
   if (l && l->canBeRead()) {
     readHit.inc();
 #ifdef SESC_ENERGY
@@ -418,15 +442,15 @@ void SMPCache::doWrite(MemRequest *mreq)
   Line *l = cache->writeLine(addr);
 
   //**************************************************new***************
-
-    if (isAwake == false)
-  {
-  	isAwake = true;//line is now awake
-  	sleepTime += globalClock%2000;//total cycles this line has been asleep
-  	performanceLoss += 1;//keep track of how many times we had to wake up
-  }
-    else
-    {/*do nothing (the line is already awake)*/};
+//
+//  if (l->getAwake() == false)
+//{
+//	l->setAwake(true);//line is now awake
+//	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//}
+//    else
+//    {/*do nothing (the line is already awake)*/};
   //*****************************************************new**************
 
 
@@ -543,14 +567,14 @@ void SMPCache::invalidate(PAddr addr, ushort size, MemObj *oc)
 
   //**************************************************new***************
 
-    if (isAwake == false)
-  {
-  	isAwake = true;//line is now awake
-  	sleepTime += globalClock%2000;//total cycles this line has been asleep
-  	performanceLoss += 1;//keep track of how many times we had to wake up
-  }
-    else
-    {/*do nothing (the line is already awake)*/};
+//  if (l->getAwake() == false)
+//{
+//	l->setAwake(true);//line is now awake
+//	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//}
+//    else
+//    {/*do nothing (the line is already awake)*/};
   //*****************************************************new**************
 
   I(oc);
@@ -596,18 +620,20 @@ void SMPCache::doInvalidate(PAddr addr, ushort size)
 
 void SMPCache::realInvalidate(PAddr addr, ushort size, bool writeBack)
 {
-
+	 Line *l = cache->findLine(addr);
 	//**************************************************new***************
 
-	  if (isAwake == false)
-	{
-		isAwake = true;//line is now awake
-		sleepTime += globalClock%2000;//total cycles this line has been asleep
-		performanceLoss += 1;//keep track of how many times we had to wake up
-	}
-	  else
-	  {/*do nothing (the line is already awake)*/};
+//	  if (l->getAwake() == false)
+//	{
+//		l->setAwake(true);//line is now awake
+//		l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//		l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//	}
+//	  else
+//	  {/*do nothing (the line is already awake)*/};
 	//*****************************************************new**************
+
+
   while(size) {
 
     Line *l = cache->findLine(addr);
@@ -743,16 +769,15 @@ SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb,
   I(cache->findLineDebug(addr) == 0);
   Line *l = cache->findLine2Replace(addr);
 
-  //**************************************************new***************
-
-    if (isAwake == false)
-  {
-  	isAwake = true;//line is now awake
-  	sleepTime += globalClock%2000;//total cycles this line has been asleep
-  	performanceLoss += 1;//keep track of how many times we had to wake up
-  }
-    else
-    {/*do nothing (the line is already awake)*/};
+//  //**************************************************new***************
+//  if (l->getAwake() == false)
+//{
+//	l->setAwake(true);//line is now awake
+//	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//}
+//    else
+//    {/*do nothing (the line is already awake)*/};
   //*****************************************************new**************
 
   if(!l) {
@@ -813,17 +838,6 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
   // that's left is to call the callback allocateLine has initially
   // received as a parameter
 
-	//**************************************************new***************
-
-	  if (isAwake == false)
-	{
-		isAwake = true;//line is now awake
-		sleepTime += globalClock%2000;//total cycles this line has been asleep
-		performanceLoss += 1;//keep track of how many times we had to wake up
-	}
-	  else
-	  {/*do nothing (the line is already awake)*/};
-	//*****************************************************new**************
 
 	if(!rpl_addr) {
     Line *l = allocateLine(addr, cb, false);
@@ -834,6 +848,19 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
       l->changeStateTo(SMP_TRANS_RSV);
       cb->call();
     }
+
+	//**************************************************new***************
+//
+//	  if (l->getAwake() == false)
+//	{
+//		l->setAwake(true);//line is now awake
+//		l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//		l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//	}
+//	  else
+//	  {/*do nothing (the line is already awake)*/};
+	//*****************************************************new**************
+
 
     return;
   }
@@ -850,6 +877,20 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
   l->setTag(cache->calcTag(addr));
   l->changeStateTo(SMP_TRANS_RSV);
   cb->call();
+
+	//**************************************************new***************
+
+//	  if (l->getAwake() == false)
+//	{
+//		l->setAwake(true);//line is now awake
+//		l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//		l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//	}
+//	  else
+//	  {/*do nothing (the line is already awake)*/};
+//	//*****************************************************new**************
+
+
 }
 
 SMPCache::Line *SMPCache::getLine(PAddr addr)
@@ -863,15 +904,15 @@ void SMPCache::writeLine(PAddr addr) {
   I(l);
 
   //**************************************************new***************
-
-    if (isAwake == false)
-  {
-  	isAwake = true;//line is now awake
-  	sleepTime += globalClock%2000;//total cycles this line has been asleep
-  	performanceLoss += 1;//keep track of how many times we had to wake up
-  }
-    else
-    {/*do nothing (the line is already awake)*/};
+//
+//  if (l->getAwake() == false)
+//{
+//	l->setAwake(true);//line is now awake
+//	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//}
+//    else
+//    {/*do nothing (the line is already awake)*/};
   //*****************************************************new**************
 }
 
@@ -881,15 +922,15 @@ void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
   
 
   //**************************************************new***************
-
-    if (isAwake == false)
-  {
-  	isAwake = true;//line is now awake
-  	sleepTime += globalClock%2000;//total cycles this line has been asleep
-  	performanceLoss += 1;//keep track of how many times we had to wake up
-  }
-    else
-    {/*do nothing (the line is already awake)*/};
+//
+//  if (l->getAwake() == false)
+//{
+//	l->setAwake(true);//line is now awake
+//	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
+//	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
+//}
+//    else
+//    {/*do nothing (the line is already awake)*/};
   //*****************************************************new**************
   I(l);
 

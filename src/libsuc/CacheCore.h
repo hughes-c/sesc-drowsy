@@ -117,6 +117,7 @@ template<class State, class Addr_t = uint, bool Energy=false>
   void createStats(const char *section, const char *name);
 
   public:
+
   // Do not use this interface, use other create
   static CacheGeneric<State, Addr_t, Energy> *create(int size, int assoc, int blksize, int addrUnit, const char *pStr, bool skew);
   static CacheGeneric<State, Addr_t, Energy> *create(const char *section, const char *append, const char *format, ...);
@@ -136,7 +137,9 @@ template<class State, class Addr_t = uint, bool Energy=false>
   // Access the line directly without checking TAG
   virtual CacheLine *getPLine(uint l) = 0;
 
-  //ALL USERS OF THIS CLASS PLEASE READ:
+  //virtual CacheLine **getContent(void) = 0;
+
+  //ALL USERS ake OF THIS CLASS PLEASE READ:
   //
   //readLine and writeLine MUST have the same functionality as findLine. The only
   //difference is that readLine and writeLine update power consumption
@@ -163,6 +166,7 @@ template<class State, class Addr_t = uint, bool Energy=false>
   CacheLine *findLine(Addr_t addr) {
     return findLinePrivate(addr);
   }
+
 
   CacheLine *readLine(Addr_t addr) {
 // std::cout << "C " << std::hex << addr << "\n";
@@ -275,18 +279,28 @@ protected:
   friend class CacheGeneric<State, Addr_t, Energy>;
   CacheAssoc(int size, int assoc, int blksize, int addrUnit, const char *pStr);
 
+
   Line *findLinePrivate(Addr_t addr);
 public:
+
+
   virtual ~CacheAssoc() {
     delete content;
     delete mem;
   }
+
+
 
   // TODO: do an iterator. not this junk!!
   Line *getPLine(uint l) {
     // Lines [l..l+assoc] belong to the same set
     I(l<numLines);
     return content[l];
+  }
+
+  Line **getContent(void)
+  {
+	  return content;
   }
 
   Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
@@ -327,6 +341,11 @@ public:
     return content[l];
   }
 
+  Line **getContent(void)
+    {
+	  return content;
+    }
+
   Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
 };
 
@@ -364,6 +383,12 @@ public:
     I(l<numLines);
     return content[l];
   }
+
+  Line **getContent(void)
+  {
+	  return content;
+   }
+
 
   Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
 };

@@ -139,6 +139,10 @@ protected:
   void concludeWriteBack(Time_t initialTime);
   void sendRead(MemRequest* mreq);
   void sendWrite(MemRequest* mreq);
+  //**************************************************************************
+
+  void goToSleep(MemRequest *mreq);
+
 
   typedef CallbackMember1<SMPCache, MemRequest *, 
                          &SMPCache::doRead> doReadCB;
