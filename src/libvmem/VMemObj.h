@@ -50,6 +50,8 @@ public:
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
+  void goToSleep(void) {};
+
   // MemObj Interface (only for highest level cache)
   void access(MemRequest *mreq);
 

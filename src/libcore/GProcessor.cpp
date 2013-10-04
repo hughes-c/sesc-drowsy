@@ -658,6 +658,7 @@ void GProcessor::addEvent(EventType ev, CallbackBase *cb, int vaddr)
 void GProcessor::retire()
 {
 #ifdef DEBUG
+
   // Check for progress. When a processor gets stuck, it sucks big time
   if ((((int)globalClock) & 0x1FFFFFL) == 0) {
     if (ROB.empty()) {
@@ -680,7 +681,14 @@ void GProcessor::retire()
     }
   }
 #endif
+  if(globalClock%2000==0)
+  	             	{
 
+  	      	   MemObj *localSource = this->memorySystem->getDataSource();
+  	             localSource->goToSleep();
+  	         	   //all my awakes need to go to false
+  	            //std::cout<<globalClock<<std::endl;
+  	             	};
   robUsed.sample(ROB.size());
 
   ushort i;
@@ -695,6 +703,8 @@ void GProcessor::retire()
 
     // save it now because retire can destroy DInst
     int rp = dinst->getInst()->getDstPool();
+
+
 
 //BEGIN STAT --------------------------------------------------------------------------------------------------------
 #if defined(STAT)
@@ -730,6 +740,7 @@ void GProcessor::retire()
 
    delete statConf;
 #endif
+
 //END STAT ----------------------------------------------------------------------------------------------------------
 
 //BEGIN PROFILING --------------------------------------------------------------------------------------------------------
@@ -836,6 +847,18 @@ void GProcessor::retire()
    delete statConf;
 #endif
 //END PROFILING --------------------------------------------------------------------------------------------------------
+
+//stuff goes here
+   /*if(clockTicks%2000==0)
+       	{
+
+	   //MemObj *localSource = this->memorySystem->getDataSource();
+       //localSource->goToSleep();
+   	   //all my awakes need to go to false
+      std::cout<<clockTicks<<std::endl;
+       	};*/
+
+
 
 #if (defined TM)
    // We must grab the type here since we will not be able to use it past the retirement phase

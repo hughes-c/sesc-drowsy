@@ -145,11 +145,16 @@ public:
     globalClock++;
     //GLOBAL CLOCK INCREMENTS HERE
    if(globalClock%2000==0)
-    	{//isAwake=false;
+    	{
+
 	   //all my awakes need to go to false
-   std::cout<<globalClock<<std::endl;
+  // std::cout<<globalClock<<std::endl;
     	};
 
+  }
+
+  static long checkClock(){
+	  return globalClock;
   }
 
   static bool empty() {

@@ -137,6 +137,10 @@ public:
 protected:
 #endif
 
+
+  void goToSleep(void) {};
+
+
   void access();
   void returnAccess();
   std::stack<MemObj*> memStack;

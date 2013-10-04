@@ -1184,6 +1184,8 @@ namespace tls{
       unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
+      void goToSleep(void) {};
+
       typedef std::list<ConflictInfo> ConflictList;
 
       ChunkBitMask findReadConflicts(const BufferBlock *currBlock, size_t chunkIndx,

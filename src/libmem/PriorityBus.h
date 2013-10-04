@@ -91,6 +91,8 @@ class PriorityBus: public MemObj {
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
+  void goToSleep(void) {};
+
   void access(MemRequest *mreq);
   void returnAccess(MemRequest *mreq);
 

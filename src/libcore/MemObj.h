@@ -108,6 +108,8 @@ public:
   virtual unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) = 0;
 #endif
 
+  virtual void goToSleep(void) = 0;
+
   //This assumes single entry point for object, which I do not like,
   //but it is still something that is worthwhile.
   virtual Time_t getNextFreeCycle() const = 0;
@@ -143,6 +145,9 @@ protected:
   unsigned int fakeAbort(unsigned int processorID, unsigned int versioning) { return 0; /*warnings*/ };
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) { return 0; /*warnings*/ };
 #endif
+
+  void goToSleep(void) {};
+
 public:
   DummyMemObj();
   DummyMemObj(const char *section, const char *sName);

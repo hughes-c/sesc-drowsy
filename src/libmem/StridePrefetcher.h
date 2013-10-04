@@ -130,6 +130,7 @@ public:
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
+  void goToSleep(void) {};
 };
 
 #endif

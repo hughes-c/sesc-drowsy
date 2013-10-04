@@ -51,6 +51,8 @@ public:
   unsigned int fakeAbort(unsigned int processorID, unsigned int versioning) {};
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
+
+  void goToSleep(void) {};
 };
 
 #endif

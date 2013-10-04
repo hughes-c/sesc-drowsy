@@ -343,6 +343,8 @@ public:
    #endif
 
    #endif
+
+   void goToSleep(void) {};
 };
 
 class WBCache : public Cache {

@@ -98,6 +98,8 @@ public:
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
+  void goToSleep(void) {};
+
   void access(MemRequest *mreq);
 
   Time_t getNextFreeCycle() const;

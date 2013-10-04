@@ -30,10 +30,7 @@ Time_t proc_stateCycles[256][NUM_STATES];
 
 Time_t proc_gateCycles[256][NUM_STATES];
 
-long cycles_asleep=0;//**************************************new
-bool ran=false;
-extern uint64_t performanceLoss;
-bool awake[256];//*********************************************new
+
 
 void EventScheduler::dump() const
 {
