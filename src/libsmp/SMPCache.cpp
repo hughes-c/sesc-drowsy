@@ -286,7 +286,8 @@ void SMPCache::goToSleep(void)
         Line **l = theSet + 1;
         while(l < setEnd)
         {
-            isAwake=false;
+            l->setAwake(false);
+
         	l++;
         }
 	}
@@ -452,7 +453,7 @@ unsigned int SMPCache::fakeAbort(unsigned int processorID, unsigned int versioni
    MemObj*    nextCache = (*lb)[0];
 
    /* Processes */
-   goToSleep();
+   //goToSleep(void);
    cacheSize = nextCache->fakeAbort(processorID, versioning);
 
    if(versioning == 1)
@@ -483,7 +484,7 @@ void SMPCache::doWrite(MemRequest *mreq)
 
   //**************************************************new***************
 
- /* if (l->getAwake() == false)
+  if (l && l->getAwake() == false)
 
     {
 
@@ -497,7 +498,9 @@ void SMPCache::doWrite(MemRequest *mreq)
 
       else
 
-     {do nothing (the line is already awake)};*/
+     {//do nothing (the line is already awake)
+    	  };
+
   //*****************************************************new**************
 
 
@@ -614,7 +617,7 @@ void SMPCache::invalidate(PAddr addr, ushort size, MemObj *oc)
 
   //**************************************************new***************
 
- /* if (l->getAwake() == false)
+  if (l && l->getAwake() == false)
 
     {
 
@@ -628,7 +631,9 @@ void SMPCache::invalidate(PAddr addr, ushort size, MemObj *oc)
 
       else
 
-     {do nothing (the line is already awake)};*/
+     {//do nothing (the line is already awake)
+    	  };
+
   //*****************************************************new**************
 
   I(oc);
@@ -675,9 +680,9 @@ void SMPCache::doInvalidate(PAddr addr, ushort size)
 void SMPCache::realInvalidate(PAddr addr, ushort size, bool writeBack)
 {
 	//**************************************************new***************
-	/*Line *l = cache->findLine(addr);// this was taken out of the while loop below SO put it back if you delete this new code
+	Line *l = cache->findLine(addr);// this was taken out of the while loop below SO put it back if you delete this new code
 
-		if (l->getAwake() == false)
+		if (l && l->getAwake() == false)
 
 		  {
 
@@ -691,7 +696,8 @@ void SMPCache::realInvalidate(PAddr addr, ushort size, bool writeBack)
 
 		    else
 
-		   {do nothing (the line is already awake)};*/
+		   {//do nothing (the line is already awake)
+		   };
 		//*****************************************************new**************
 
   while(size) {
@@ -832,7 +838,7 @@ SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb,
 
   //**************************************************new***************
 
-  /*if (l->getAwake() == false)
+  if (l && l->getAwake() == false)
 
     {
 
@@ -846,7 +852,8 @@ SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb,
 
       else
 
-     {do nothing (the line is already awake)};*/
+     {//do nothing (the line is already awake)
+     };
   //*****************************************************new**************
 
   if(!l) {
@@ -939,7 +946,7 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
 
   //**************************************************new***************
 
-      	/*if (l->getAwake() == false)
+      	if (l && l->getAwake() == false)
 
       	  {
 
@@ -953,7 +960,8 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
 
       	    else
 
-      	   {do nothing (the line is already awake)};*/
+      	   {//do nothing (the line is already awake)
+      	   };
       	//*****************************************************new**************
 }
 
@@ -969,7 +977,7 @@ void SMPCache::writeLine(PAddr addr) {
 
   //**************************************************new***************
 
-  /*if (l->getAwake() == false)
+  if (l && l->getAwake() == false)
 
       	  {
 
@@ -983,7 +991,8 @@ void SMPCache::writeLine(PAddr addr) {
 
       	    else
 
-      	   {do nothing (the line is already awake)};*/
+      	   {//do nothing (the line is already awake)
+      	   };
   //*****************************************************new**************
 }
 
@@ -993,7 +1002,7 @@ void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
   
 
   //**************************************************new***************
- /* if (l->getAwake() == false)
+  if (l && l->getAwake() == false)
 
       	  {
 
@@ -1007,7 +1016,8 @@ void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
 
       	    else
 
-      	   {do nothing (the line is already awake)};*/
+      	   {//do nothing (the line is already awake)
+      	   };
   //*****************************************************new**************
   I(l);
 

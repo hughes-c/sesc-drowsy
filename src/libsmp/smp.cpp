@@ -39,14 +39,15 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // debugging defines
 #include "SMPDebug.h"
 
+extern long performanceLoss;
+extern long sleepTime;
+
 #if (defined TM)
 #include "transReport.h"
 #include "transCoherence.h"
 
-  extern long cycles_asleep;//**************************************new
-  extern bool ran;
-  extern uint64_t performanceLoss;
-  extern bool awake[1024];//*********************************************new
+
+
 
 
 transReport *tmReport = 0;
@@ -123,7 +124,7 @@ int main(int argc, char**argv, char **envp)
   Profiling::finished();
   #endif
 //std::cout<<performanceLoss<<std::endl;
-//std::cout<<cycles_asleep<<std::endl;
+//std::cout<<sleepTime<<std::endl;
 //std::cout<<globalClock<<std::endl;
   delete osSim;
 
