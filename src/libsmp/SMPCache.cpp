@@ -42,10 +42,8 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // Another important assumption is that every cache line in the memory
 // subsystem is the same size. This is not hard to fix, though. Any
 // candidates?
-//int i;
- // extern uint64_t sleepTime=0;//**************************************new
- // extern uint64_t performanceLoss=0;
-  extern bool isAwake=false;//*********************************************new
+
+
 
 
 MSHR<PAddr, SMPCache> *SMPCache::mutExclBuffer = NULL;
@@ -243,55 +241,33 @@ void SMPCache::access(MemRequest *mreq)
 void SMPCache::goToSleep(void)
 
 {
-
-
-
-   // Line *theSet = cache->getPLine(f);
-
-	//Line *mem;
+//    uint index = cache->calcIndex4Tag(tag);//
 
 	Line **content= cache->getContent() ;
-
-	//uint addr = mreq->getPAddr();
-
-	//uint tag = cache->calcTag(addr);
-
     uint assoc = cache->getAssoc();
-
     uint numSets = cache->getNumSets();
+    uint numLines =cache->getNumLines();
 
-//    uint index = cache->calcIndex4Tag(tag);
-
-//
-
-//
-
-//
-
-//    uint numLines =cache->getNumLines();
-
-//
-
-//    //mem     = new Line [numLines + 1];
-
-//    //content = new Line* [numLines + 1];
-
-//
-
-    for(uint index = 0; index < numSets; ++index)
+    uint index=0;
+    while(index < numLines)
     {
     	Line **theSet = &content[index];
     	Line **setEnd = theSet + assoc;
 
-        Line **l = theSet + 1;
-        while(l < setEnd)
+        Line **b = theSet + 1;
+        while(b <= setEnd)
         {
-            l->setAwake(false);
+            Line *l=*b;
+            if(l)
+            {
+               l->setAwake(false);
+            };
 
-        	l++;
-        }
-	}
+        	b++;
+        };
 
+        index=index+4;
+	};
 
 }
 
@@ -315,7 +291,6 @@ void SMPCache::doRead(MemRequest *mreq)
   PAddr addr = mreq->getPAddr();
   Line *l = cache->readLine(addr);
 //**************************************************new***************
- //goToSleep(mreq);
 
  if (l && l->getAwake() == false)
 
