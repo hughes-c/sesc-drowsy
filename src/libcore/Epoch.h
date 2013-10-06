@@ -1184,7 +1184,7 @@ namespace tls{
       unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
-      void goToSleep(void) {};
+      void sleepCacheLines(void) {};
 
       typedef std::list<ConflictInfo> ConflictList;
 

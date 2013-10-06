@@ -401,8 +401,9 @@ private:
   Addr_t tag;
 
   //drowsy
-  uint64_t sleepTime, performanceLoss;
-  bool     isAwake;
+  uint64_t sleepTime;
+  uint64_t performanceLoss;
+  bool     awakeState;
 
 
 public:
@@ -411,37 +412,33 @@ public:
   }
 
  uint64_t getSleepTime() const { return sleepTime; }
- void setSleepTime(uint64_t timeIn) { sleepTime = timeIn; }
+ void     setSleepTime(uint64_t timeIn) { sleepTime = timeIn; }
 
  uint64_t getPerformanceLoss() const { return performanceLoss; }
- void setPerformanceLoss(uint64_t perfLoss) { performanceLoss = perfLoss; }
+ void     setPerformanceLoss(uint64_t perfLoss) { performanceLoss = perfLoss; }
 
- bool getAwake() const {
-	 return isAwake; }
- void setAwake(bool wakeyWakey) {
-	 isAwake = wakeyWakey;
- }
+ bool     getAwake() const { return awakeState; }
+ void     setAwake(bool awakeState) { awakeState = awakeState; }
 
  Addr_t getTag() const { return tag; }
+ 
  void setTag(Addr_t a) {
    I(a);
    tag = a;
  }
+ 
  void clearTag() { tag = 0; }
- void initialize(void *c) {
-   clearTag();
- }
+ 
+ void initialize(void *c) { clearTag(); }
 
  virtual bool isValid() const { return tag; }
 
  virtual void invalidate() { clearTag(); }
 
- virtual bool isLocked() const {
-   return false;
- }
+ virtual bool isLocked() const { return false; }
 
- virtual void dump(const char *str) {
- }
+ virtual void dump(const char *str) { }
+ 
 };
 
 #ifndef CACHECORE_CPP

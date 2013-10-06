@@ -138,7 +138,7 @@ protected:
 #endif
 
 
-  void goToSleep(void) {};
+  void sleepCacheLines(void) {};
 
 
   void access();

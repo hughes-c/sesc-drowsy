@@ -681,14 +681,7 @@ void GProcessor::retire()
     }
   }
 #endif
-  if(globalClock%2000==0)
-  	             	{
 
-  	      	   MemObj *localSource = this->memorySystem->getDataSource();
-  	             localSource->goToSleep();
-  	         	   //all my awakes need to go to false
-  	            //std::cout<<globalClock<<std::endl;
-  	             	};
   robUsed.sample(ROB.size());
 
   ushort i;
@@ -848,16 +841,15 @@ void GProcessor::retire()
 #endif
 //END PROFILING --------------------------------------------------------------------------------------------------------
 
-//stuff goes here
-   /*if(clockTicks%2000==0)
-       	{
-
-	   //MemObj *localSource = this->memorySystem->getDataSource();
-       //localSource->goToSleep();
-   	   //all my awakes need to go to false
-      std::cout<<clockTicks<<std::endl;
-       	};*/
-
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
+   
+   if(globalClock%2000==0)
+   {
+      MemObj *localSource = this->memorySystem->getDataSource();
+      localSource->sleepCacheLines();
+   }
+   
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 
 
 #if (defined TM)

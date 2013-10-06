@@ -39,9 +39,6 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // debugging defines
 #include "SMPDebug.h"
 
-extern long performanceLoss;
-extern long sleepTime;
-
 #if (defined TM)
 #include "transReport.h"
 #include "transCoherence.h"
@@ -123,10 +120,7 @@ int main(int argc, char**argv, char **envp)
   #elif defined(PROFILE)
   Profiling::finished();
   #endif
-//std::cout<<performanceLoss<<std::endl;
-  //long sleepTime = l->getSleepTime();
-//std::cout<<sleepTime<<std::endl;
-//std::cout<<globalClock<<std::endl;
+
   delete osSim;
 
   return 0;

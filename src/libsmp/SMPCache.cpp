@@ -193,6 +193,12 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
 
 SMPCache::~SMPCache() 
 {
+   int p = 0;
+   
+   if(p == 0)
+   {
+      p = 1;
+   }
   // do nothing
 }
 
@@ -238,36 +244,38 @@ void SMPCache::access(MemRequest *mreq)
    // (this will never happen if upper level is write-through cache,
    // which is what we are assuming)
 }
-void SMPCache::goToSleep(void)
 
+void SMPCache::sleepCacheLines(void)
 {
-//    uint index = cache->calcIndex4Tag(tag);//
+   Line **content= cache->getContent() ;
+   
+   uint assoc = cache->getAssoc();
+   uint numSets = cache->getNumSets();
+   uint numLines =cache->getNumLines();
 
-	Line **content= cache->getContent() ;
-    uint assoc = cache->getAssoc();
-    uint numSets = cache->getNumSets();
-    uint numLines =cache->getNumLines();
+   uint index = 0;
 
-    uint index=0;
-    while(index < numLines)
-    {
-    	Line **theSet = &content[index];
-    	Line **setEnd = theSet + assoc;
+   while(index < numLines)
+   {
+      Line **theSet = &content[index];
+      Line **setEnd = theSet + assoc;
 
-        Line **b = theSet + 1;
-        while(b <= setEnd)
-        {
-            Line *l=*b;
-            if(l)
-            {
-               l->setAwake(false);
-            };
+      Line **b = theSet + 1;
+      
+      while(b <= setEnd)
+      {
+         Line *l=*b;
+         
+         if(l)
+         {
+            l->setAwake(false);
+         };
 
-        	b++;
-        };
+         b++;
+      };
 
-        index=index+4;
-	};
+      index=index+4;
+   };
 
 }
 
@@ -428,7 +436,7 @@ unsigned int SMPCache::fakeAbort(unsigned int processorID, unsigned int versioni
    MemObj*    nextCache = (*lb)[0];
 
    /* Processes */
-   //goToSleep(void);
+   //sleepCacheLines(void);
    cacheSize = nextCache->fakeAbort(processorID, versioning);
 
    if(versioning == 1)

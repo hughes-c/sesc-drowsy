@@ -96,7 +96,7 @@ public:
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
-  void goToSleep(void) {};
+  void sleepCacheLines(void) {};
 
   // interface with lower level
   virtual void returnAccess(MemRequest *mreq);
