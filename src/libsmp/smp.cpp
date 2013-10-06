@@ -124,7 +124,7 @@ int main(int argc, char**argv, char **envp)
   Profiling::finished();
   #endif
 //std::cout<<performanceLoss<<std::endl;
-  long sleepTime = l->getSleepTime();
+  //long sleepTime = l->getSleepTime();
 //std::cout<<sleepTime<<std::endl;
 //std::cout<<globalClock<<std::endl;
   delete osSim;
