@@ -193,13 +193,39 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
 
 SMPCache::~SMPCache() 
 {
-   int p = 0;
+   //Under the default SMP/CMP only the DCache can be of type SMPCache
+   //TODO Change this to test for DCache only if adding levels
+   std::cout << this->getSymbolicName() << "\n";
    
-   if(p == 0)
+   Line **content= cache->getContent();
+   
+   uint assoc = cache->getAssoc();
+   uint numSets = cache->getNumSets();
+   uint numLines =cache->getNumLines();
+
+   uint index = 0;
+
+   while(index < numLines)
    {
-      p = 1;
+      Line **theSet = &content[index];
+      Line **setEnd = theSet + assoc;
+
+      Line **b = theSet; + 1;
+      
+      while(b < setEnd)
+      {
+         Line *l = *b;
+         
+         if(l)
+         {
+            std::cout << index << "\t" << l->getAwake() << "\t" << l->getSleepTime() << "\t" << l->getPerformanceLoss() <<  "\n";
+         }
+
+         b++;
+      }
+
+      index = index + 4;
    }
-  // do nothing
 }
 
 Time_t SMPCache::getNextFreeCycle() const
@@ -264,18 +290,18 @@ void SMPCache::sleepCacheLines(void)
       
       while(b <= setEnd)
       {
-         Line *l=*b;
+         Line *l = *b;
          
          if(l)
          {
             l->setAwake(false);
-         };
+         }
 
          b++;
-      };
+      }
 
-      index=index+4;
-   };
+      index = index + 4;
+   }
 
 }
 
@@ -296,27 +322,24 @@ void SMPCache::read(MemRequest *mreq)
 
 void SMPCache::doRead(MemRequest *mreq)
 {
-  PAddr addr = mreq->getPAddr();
-  Line *l = cache->readLine(addr);
-//**************************************************new***************
+   PAddr addr = mreq->getPAddr();
+   Line *l = cache->readLine(addr);
 
- if (l && l->getAwake() == false)
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-  {
-  	l->setAwake(true);//line is now awake
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-  	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-  	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-  }
-
-    else
-
-   {/*do nothing (the line is already awake)*/};
-
-
-//*****************************************************new**************
+//END DROWSY -----------------------------------------------------------------------------------------------------------
+   
   if (l && l->canBeRead()) {
     readHit.inc();
 #ifdef SESC_ENERGY
@@ -465,28 +488,20 @@ void SMPCache::doWrite(MemRequest *mreq)
   PAddr addr = mreq->getPAddr();
   Line *l = cache->writeLine(addr);
 
-  //**************************************************new***************
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-  if (l && l->getAwake() == false)
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-    {
-
-    	l->setAwake(true);//line is now awake
-
-    	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-    	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-    }
-
-      else
-
-     {//do nothing (the line is already awake)
-    	  };
-
-  //*****************************************************new**************
-
-
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 
 
 #ifdef SESC_ENERGY
@@ -598,26 +613,20 @@ void SMPCache::invalidate(PAddr addr, ushort size, MemObj *oc)
 {
   Line *l = cache->findLine(addr);
 
-  //**************************************************new***************
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-  if (l && l->getAwake() == false)
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-    {
-
-    	l->setAwake(true);//line is now awake
-
-    	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-    	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-    }
-
-      else
-
-     {//do nothing (the line is already awake)
-    	  };
-
-  //*****************************************************new**************
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 
   I(oc);
   I(pendInvTable.find(addr) == pendInvTable.end());
@@ -662,26 +671,22 @@ void SMPCache::doInvalidate(PAddr addr, ushort size)
 
 void SMPCache::realInvalidate(PAddr addr, ushort size, bool writeBack)
 {
-	//**************************************************new***************
-	Line *l = cache->findLine(addr);// this was taken out of the while loop below SO put it back if you delete this new code
+   Line *l = cache->findLine(addr);// this was taken out of the while loop below SO put it back if you delete this new code
 
-		if (l && l->getAwake() == false)
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-		  {
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-		  	l->setAwake(true);//line is now awake
-
-		  	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-		  	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-		  }
-
-		    else
-
-		   {//do nothing (the line is already awake)
-		   };
-		//*****************************************************new**************
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 
   while(size) {
 
@@ -819,25 +824,20 @@ SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb,
   I(cache->findLineDebug(addr) == 0);
   Line *l = cache->findLine2Replace(addr);
 
-  //**************************************************new***************
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-  if (l && l->getAwake() == false)
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-    {
-
-    	l->setAwake(true);//line is now awake
-
-    	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-    	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-    }
-
-      else
-
-     {//do nothing (the line is already awake)
-     };
-  //*****************************************************new**************
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 
   if(!l) {
     // need to schedule allocate line for next cycle
@@ -927,25 +927,20 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
   l->changeStateTo(SMP_TRANS_RSV);
   cb->call();
 
-  //**************************************************new***************
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-      	if (l && l->getAwake() == false)
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-      	  {
-
-      	  	l->setAwake(true);//line is now awake
-
-      	  	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-      	  	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-      	  }
-
-      	    else
-
-      	   {//do nothing (the line is already awake)
-      	   };
-      	//*****************************************************new**************
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 }
 
 SMPCache::Line *SMPCache::getLine(PAddr addr)
@@ -958,50 +953,41 @@ void SMPCache::writeLine(PAddr addr) {
   Line *l = cache->writeLine(addr);
   I(l);
 
-  //**************************************************new***************
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-  if (l && l->getAwake() == false)
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-      	  {
-
-      	  	l->setAwake(true);//line is now awake
-
-      	  	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-      	  	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-      	  }
-
-      	    else
-
-      	   {//do nothing (the line is already awake)
-      	   };
-  //*****************************************************new**************
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 }
 
 void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack) 
 {
   Line *l = cache->findLine(addr);
-  
 
-  //**************************************************new***************
-  if (l && l->getAwake() == false)
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-      	  {
+   if (l && l->getAwake() == false)
+   {
+      l->setAwake(true);                                         //line is now awake
+      l->setSleepTime(l->getSleepTime() + globalClock%2000);     //total cycles this line has been asleep
+      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+   }
+   else
+   {
+      /*do nothing (the line is already awake)*/
+   };
 
-      	  	l->setAwake(true);//line is now awake
-
-      	  	l->setSleepTime(l->getSleepTime() + globalClock%2000);//total cycles this line has been asleep
-
-      	  	l->setPerformanceLoss(l->getPerformanceLoss() + 1);//keep track of how many times we had to wake up
-
-      	  }
-
-      	    else
-
-      	   {//do nothing (the line is already awake)
-      	   };
-  //*****************************************************new**************
+//END DROWSY -----------------------------------------------------------------------------------------------------------
+   
   I(l);
 
   I(pendInvTable.find(addr) == pendInvTable.end());

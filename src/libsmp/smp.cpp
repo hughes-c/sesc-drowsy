@@ -43,10 +43,6 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "transReport.h"
 #include "transCoherence.h"
 
-
-
-
-
 transReport *tmReport = 0;
 #endif
 
@@ -64,7 +60,7 @@ int main(int argc, char**argv, char **envp)
 {
 
 
-	osSim = new OSSim(argc, argv, envp);
+  osSim = new OSSim(argc, argv, envp);
 
   int nProcs = SescConf->getRecordSize("","cpucore");
 

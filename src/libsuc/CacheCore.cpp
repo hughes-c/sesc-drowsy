@@ -298,14 +298,14 @@ CacheAssoc<State, Addr_t, Energy>::CacheAssoc(int size, int assoc, int blksize, 
   mem     = new Line [numLines + 1];
   content = new Line* [numLines + 1];
 
-  for(uint i = 0; i < numLines; i++) {
+  //This is where the lines are initialized
+  for(uint i = 0; i < numLines; i++)
+  {
     mem[i].initialize(this);
     mem[i].invalidate();
-   // mem[i].resetAwake();
     content[i] = &mem[i];
-    //std::cout<<mem[i]<<std::endl;
   }
-  //std::cout<<mem<<std::endl;
+
   irand = 0;
 }
 
@@ -325,7 +325,7 @@ typename CacheAssoc<State, Addr_t, Energy>::Line *CacheAssoc<State, Addr_t, Ener
 
   // Check most typical case
   if ((*theSet)->getTag() == tag) {
-    //this assertion is not true for SMP; it is valid to return invalid line
+    //NOTE this assertion is not true for SMP; it is valid to return invalid line
 #if !defined(SESC_SMP) && !defined(SESC_CRIT)
     I((*theSet)->isValid());  
 #endif
@@ -335,7 +335,7 @@ typename CacheAssoc<State, Addr_t, Energy>::Line *CacheAssoc<State, Addr_t, Ener
   Line **lineHit=0;
   Line **setEnd = theSet + assoc;
 
-  // For sure that position 0 is not (short-cut)
+  // For sure that position 0 is not the line (short-cut from above)
   {
     Line **l = theSet + 1;
     while(l < setEnd) {
@@ -347,13 +347,13 @@ typename CacheAssoc<State, Addr_t, Energy>::Line *CacheAssoc<State, Addr_t, Ener
     }
   }
 
-  if (lineHit == 0)
+  if(lineHit == 0)
     return 0;
 
   I((*lineHit)->isValid());
 
   // No matter what is the policy, move lineHit to the *theSet. This
-  // increases locality
+  // increases locality because *theSet is the quick test above (1st element)
   Line *tmp = *lineHit;
   {
     Line **l = lineHit;
@@ -388,7 +388,7 @@ typename CacheAssoc<State, Addr_t, Energy>::Line
   // Start in reverse order so that get the youngest invalid possible,
   // and the oldest isLocked possible (lineFree)
   {
-    Line **l = setEnd -1;
+    Line **l = setEnd - 1;
     while(l >= theSet) {
       if ((*l)->getTag() == tag) {
         lineHit = l;
@@ -471,7 +471,7 @@ CacheDM<State, Addr_t, Energy>::CacheDM(int size, int blksize, int addrUnit, con
   mem     = new Line[numLines + 1];
   content = new Line* [numLines + 1];
 
-
+  //This is where the lines are initialized
   for(uint i = 0; i < numLines; i++) {
     mem[i].initialize(this);
     mem[i].invalidate();
@@ -534,6 +534,7 @@ CacheDMSkew<State, Addr_t, Energy>::CacheDMSkew(int size, int blksize, int addrU
   mem     = new Line[numLines + 1];
   content = new Line* [numLines + 1];
 
+  //This is where the lines are initialized
   for(uint i = 0; i < numLines; i++) {
     mem[i].initialize(this);
     mem[i].invalidate();

@@ -843,10 +843,12 @@ void GProcessor::retire()
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
    
-   if(globalClock%2000==0)
+   if(globalClock % 2000 == 0)
    {
       MemObj *localSource = this->memorySystem->getDataSource();
-      localSource->sleepCacheLines();
+      
+      if(std::string(localSource->getSymbolicName()).find("_D") != std::string::npos)
+         localSource->sleepCacheLines();
    }
    
 //END DROWSY -----------------------------------------------------------------------------------------------------------

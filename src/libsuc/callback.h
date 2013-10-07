@@ -34,9 +34,6 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "TQueue.h"
 #include "Snippets.h"
 
- extern bool isAwake;
-
-
 #if defined(__sgi) && !defined(__GNUC__)
 #pragma set woff 1681
 #endif

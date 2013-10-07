@@ -35,6 +35,8 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "GProcessor.h"
 #endif
 
+static int bampf;
+
 enum    ReplacementPolicy  {LRU, RANDOM};
 
 #ifdef SESC_ENERGY
@@ -290,14 +292,7 @@ public:
     return content[l];
   }
 
-  Line **getContent(void)
-
-    {
-
-    return content;
-
-    }
-
+  Line **getContent(void){ return content; }
 
   Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
 };
@@ -397,7 +392,7 @@ public:
 
 template<class Addr_t=uint>
 class StateGeneric {
-private:
+private:   
   Addr_t tag;
 
   //drowsy
@@ -407,6 +402,14 @@ private:
 
 
 public:
+  //FIXME This is called 148005 times for asmTest_threads 4
+//   StateGeneric()
+//   {
+//      std::cout <<  bampf << " Here\n";
+//      bampf = bampf + 1 ;
+// 
+//   }
+  
   virtual ~StateGeneric() {
     tag = 0;
   }
@@ -429,7 +432,13 @@ public:
  
  void clearTag() { tag = 0; }
  
- void initialize(void *c) { clearTag(); }
+ void initialize(void *c)
+ {
+    clearTag();
+    setSleepTime(0);
+    setPerformanceLoss(0);
+    setAwake(false);
+ }
 
  virtual bool isValid() const { return tag; }
 
