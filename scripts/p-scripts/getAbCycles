@@ -1,0 +1,1 @@
+cat $1 | cut -d ":" -f 17 | grep -v AB_CYCLES

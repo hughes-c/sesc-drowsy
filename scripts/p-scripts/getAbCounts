@@ -1,0 +1,1 @@
+cat $1 | cut -d ":" -f 5 | grep -v ABORTS

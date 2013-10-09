@@ -1,0 +1,15 @@
+echo "Moving TM Debug Files..."
+mvtmdebug
+
+echo "Processing TM Results..."
+cd ../debug
+processTmResults
+
+echo "Processing SEQ Results..."
+cd ../results
+processSeqResults
+
+echo "Compiling Result CSV..."
+compileResults
+
+echo "My work here is done..."

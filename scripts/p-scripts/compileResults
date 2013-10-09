@@ -1,0 +1,25 @@
+dir=`pwd`
+filename=`echo $dir | sed "s/.*\([EL][EL][-].*\)[-].*/\1/"`
+if [ "`echo $filename | grep '/'`" != "" ]
+then
+  #filename="`echo $dir | sed 's/.*RunSim\([EL][EL][/][^/]*\).*/\1/' | tr '\/' '-'`"
+  filename="`echo $dir | awk '{split($1,a,"sesc")} {print "sesc"a[2]}' | tr '\/' '-'`"
+fi
+echo "Benchmark,TotalCycles,,CommitCycles,,Aborts,,AbortCycles,,Useful Nacks" > ../${filename}.csv
+
+for i in `ls -1`
+do
+  tmpFile=`echo $i | sed "s/^\([^.]*\)[.].*/\1/"`
+  
+  echo -n ${tmpFile}, >> ../${filename}.csv
+  echo -n `getSeqCyclesTotal ../sescresults/${tmpFile}.seqCyc`,, >> ../${filename}.csv
+  echo -n `getCmCyclesTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+  echo -n `getAbCountsTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+  echo -n `getAbCyclesTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+  echo `getCmNackCyclesTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+
+  echo Results grabbed from: ${i}
+done
+
+cd ..
+

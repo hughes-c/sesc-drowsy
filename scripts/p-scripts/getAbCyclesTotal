@@ -1,0 +1,1 @@
+echo `getAbCycles $1` | sed "s/ /+/g" | bc

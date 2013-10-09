@@ -1,0 +1,1 @@
+echo `getSeqInsts $1` | sed "s/ /+/g" | bc

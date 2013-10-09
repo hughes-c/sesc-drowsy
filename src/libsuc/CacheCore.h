@@ -399,17 +399,10 @@ private:
   uint64_t sleepTime;
   uint64_t performanceLoss;
   bool     awakeState;
-
+  uint64_t lastSleep;
+  uint64_t lastAwake;
 
 public:
-  //FIXME This is called 148005 times for asmTest_threads 4
-//   StateGeneric()
-//   {
-//      std::cout <<  bampf << " Here\n";
-//      bampf = bampf + 1 ;
-// 
-//   }
-  
   virtual ~StateGeneric() {
     tag = 0;
   }
@@ -419,6 +412,12 @@ public:
 
  uint64_t getPerformanceLoss() const { return performanceLoss; }
  void     setPerformanceLoss(uint64_t perfLoss) { performanceLoss = perfLoss; }
+
+ uint64_t getLastSleep() const { return lastSleep; }
+ void     setLastSleep(uint64_t sleepy) { lastSleep = sleepy; }
+
+ uint64_t getLastAwake() const { return lastAwake; }
+  void     setLastAwake(uint64_t wakey) { lastAwake = wakey; }
 
  bool     getAwake() const { return awakeState; }
  void     setAwake(bool awakeState) { awakeState = awakeState; }
@@ -438,6 +437,8 @@ public:
     setSleepTime(0);
     setPerformanceLoss(0);
     setAwake(false);
+    setLastSleep(0);
+    setLastAwake(0);
  }
 
  virtual bool isValid() const { return tag; }

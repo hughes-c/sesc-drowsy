@@ -1,0 +1,7 @@
+read in
+if [ "${in}" != "" ]
+then
+  count=`echo ${in} | wc -w`
+  total=`echo ${in} | sed "s/ /+/g" | bc`
+ echo "scale=7;${total}/${count}" | bc
+fi

@@ -1,0 +1,1 @@
+echo `getCmNackCycles $1` | sed "s/ /+/g" | bc

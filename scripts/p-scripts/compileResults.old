@@ -1,0 +1,18 @@
+dir=`pwd`
+filename=`echo $dir | sed "s/.*\([EL][EL][-].*\)[-].*/\1/"`
+echo "Benchmark,TotalCycles,,CommitCycles,,Aborts,,AbortCycles,,Useful Nacks" > ../${filename}.csv
+
+for i in `ls -1`
+do
+  tmpFile=`echo $i | sed "s/^\([^.]*\)[.].*/\1/"`
+  
+  echo -n ${tmpFile}, >> ../${filename}.csv
+  echo -n `getSeqCyclesTotal ../sescresults/${tmpFile}.seqCyc`,, >> ../${filename}.csv
+  echo -n `getCmCyclesTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+  echo -n `getAbCountsTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+  echo -n `getAbCyclesTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+  echo `getCmNackCyclesTotal ../tmresults/${tmpFile}.tmSummary`,, >> ../${filename}.csv
+
+  echo Results grabbed from: ${i}
+done
+
