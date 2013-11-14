@@ -400,7 +400,7 @@ private:
   uint64_t performanceLoss;
   bool     awakeState;
   uint64_t lastSleep;
-  uint64_t lastAwake;
+  uint64_t wakeClock;
 
 public:
   virtual ~StateGeneric() {
@@ -416,11 +416,8 @@ public:
  uint64_t getLastSleep() const { return lastSleep; }
  void     setLastSleep(uint64_t sleepy) { lastSleep = sleepy; }
 
- uint64_t getLastAwake() const { return lastAwake; }
-  void     setLastAwake(uint64_t wakey) { lastAwake = wakey; }
-
  bool     getAwake() const { return awakeState; }
- void     setAwake(bool awakeState) { awakeState = awakeState; }
+ void     setAwake(bool awake) { awakeState = awake; }
 
  Addr_t getTag() const { return tag; }
  
@@ -430,6 +427,19 @@ public:
  }
  
  void clearTag() { tag = 0; }
+
+ void wakeLine()
+ {
+	 if(globalClock != wakeClock)
+	 {
+		 awakeState = true;
+		 sleepTime = sleepTime + globalClock - lastSleep;
+		 performanceLoss = performanceLoss + 1;
+		 wakeClock = globalClock;
+	 }
+	 else
+		 std::cout << "Boogety Boo!\n";
+ }
  
  void initialize(void *c)
  {
@@ -438,7 +448,8 @@ public:
     setPerformanceLoss(0);
     setAwake(false);
     setLastSleep(0);
-    setLastAwake(0);
+
+    wakeClock = 0;
  }
 
  virtual bool isValid() const { return tag; }

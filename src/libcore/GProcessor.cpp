@@ -359,6 +359,7 @@ GProcessor::GProcessor(GMemorySystem *gm, CPU_t i, size_t numFlows)
 GProcessor::~GProcessor()
 {
 
+
 #ifdef SESC_ENERGY
    std::cerr << Id << ", ";
    for(size_t counter = 0; counter < NUM_STATES; counter++)
@@ -648,6 +649,7 @@ void GProcessor::report(const char *str)
 {
   Report::field("Proc(%d):clockTicks=%lld", Id, clockTicks);
   memorySystem->getMemoryOS()->report(str);
+
 }
 
 void GProcessor::addEvent(EventType ev, CallbackBase *cb, int vaddr)
@@ -657,6 +659,7 @@ void GProcessor::addEvent(EventType ev, CallbackBase *cb, int vaddr)
 
 void GProcessor::retire()
 {
+
 #ifdef DEBUG
 
   // Check for progress. When a processor gets stuck, it sucks big time
@@ -681,6 +684,21 @@ void GProcessor::retire()
     }
   }
 #endif
+
+  //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
+
+         if(globalClock >0 && globalClock% 2000 == 0)
+         {
+
+            MemObj *localSource = this->memorySystem->getDataSource();
+
+            if(std::string(localSource->getSymbolicName()).find("_D") != std::string::npos)//test for data cache
+               localSource->sleepCacheLines();
+
+            std::cout << globalClock << "  " << localSource->getSymbolicName() << std::endl;
+         }
+
+      //END DROWSY -----------------------------------------------------------------------------------------------------------
 
   robUsed.sample(ROB.size());
 
@@ -841,17 +859,6 @@ void GProcessor::retire()
 #endif
 //END PROFILING --------------------------------------------------------------------------------------------------------
 
-//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-   
-   if(globalClock % 2000 == 0)
-   {
-      MemObj *localSource = this->memorySystem->getDataSource();
-      
-      if(std::string(localSource->getSymbolicName()).find("_D") != std::string::npos)
-         localSource->sleepCacheLines();
-   }
-   
-//END DROWSY -----------------------------------------------------------------------------------------------------------
 
 
 #if (defined TM)

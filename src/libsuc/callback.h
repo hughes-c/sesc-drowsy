@@ -138,17 +138,11 @@ public:
 
     while ((cb = cbQ.nextJob(globalClock)) ) {
       cb->call();
+
     }
     globalClock++;
-    //GLOBAL CLOCK INCREMENTS HERE
-   if(globalClock%2000==0)
-    	{
-
-	   //all my awakes need to go to false
-  // std::cout<<globalClock<<std::endl;
-    	};
-
-  }
+       //GLOBAL CLOCK INCREMENTS HERE
+    }
 
   static long checkClock(){
 	  return globalClock;

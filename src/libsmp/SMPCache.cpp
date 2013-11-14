@@ -210,7 +210,7 @@ SMPCache::~SMPCache()
       Line **theSet = &content[index];
       Line **setEnd = theSet + assoc;
 
-      Line **b = theSet; + 1;
+      Line **b = theSet;
       
       while(b < setEnd)
       {
@@ -219,12 +219,14 @@ SMPCache::~SMPCache()
          if(l)
          {
         	 if(l->getAwake()==false)
-        	 {l->setSleepTime(l->getSleepTime()+globalClock%2000);
+        	 {
+        		 l->setSleepTime(l->getSleepTime()+globalClock%2000);
         	 }
-        	 else{
-        		 l->setSleepTime(l->getSleepTime()+l->getLastAwake()-l->getLastSleep());
+        	 else
+        	 {
+        		// l->setSleepTime(l->getSleepTime()+l->getLastAwake()-l->getLastSleep());
         	 }
-            std::cout << index << "\t" << l->getSleepTime() << "\t" << l->getPerformanceLoss() <<  "\n";
+           std::cout << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t" << l->getPerformanceLoss() <<  "\n";
          }
 
          b++;
@@ -292,27 +294,28 @@ void SMPCache::sleepCacheLines(void)
       Line **theSet = &content[index];
       Line **setEnd = theSet + assoc;
 
-      Line **b = theSet + 1;
+      Line **b = theSet;
       
       while(b < setEnd)
       {
          Line *l = *b;
          
-         if(l && l->getAwake()==false)
+         if(l)
          {
+			 if(l->getAwake() == false)
+			 {
 
-            l->setSleepTime(l->getSleepTime() + 2000);
-
-
-            //l->setLastSleep(globalClock);
+				l->setSleepTime(l->getSleepTime() + 2000);
+			 }
+			 else
+			 {
+				 l->setAwake(false);
+			 }
          }
-         else
-         {
-         l->setAwake(false);
+
          l->setLastSleep(globalClock);
-         l->setSleepTime(l->getSleepTime() + globalClock - l->getLastAwake());
-         };
          b++;
+
       }
 
       index = index + 4;
@@ -342,17 +345,13 @@ void SMPCache::doRead(MemRequest *mreq)
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-   if (l && l->getAwake() == false)
+   if (l && l->getAwake() == false)// if line is asleep
    {
-      l->setAwake(true);                                         //line is now awake
-      l->setLastAwake(globalClock);
-      //l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
-      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+	   l->wakeLine();
+//      l->setAwake(true);  // wake it up
+//      l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
+//      l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
    }
-   else
-   {
-      /*do nothing (the line is already awake)*/
-   };
 
 //END DROWSY -----------------------------------------------------------------------------------------------------------
    
@@ -506,17 +505,14 @@ void SMPCache::doWrite(MemRequest *mreq)
 
   //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-     if (l && l->getAwake() == false)
+     if (l && l->getAwake() == false)// if line is asleep
      {
-        l->setAwake(true);                                         //line is now awake
-        l->setLastAwake(globalClock);
-        //l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
-        l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+    	 l->wakeLine();
+//        l->setAwake(true);  // wake it up
+//        //l->setLastAwake(globalClock);// record when it woke up
+//        l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
+//        l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
      }
-     else
-     {
-        /*do nothing (the line is already awake)*/
-     };
 
   //END DROWSY -----------------------------------------------------------------------------------------------------------
 
@@ -936,23 +932,20 @@ void SMPCache::writeLine(PAddr addr) {
 
 }
 
-void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack) 
+void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
 {
   Line *l = cache->findLine(addr);
 
   //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-     if (l && l->getAwake() == false)
+     if (l && l->getAwake() == false)// if line is asleep
      {
-        l->setAwake(true);                                         //line is now awake
-        l->setLastAwake(globalClock);
-        //l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
-        l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
+    	 l->wakeLine();
+//        l->setAwake(true);  // wake it up
+//        //l->setLastAwake(globalClock);// record when it woke up
+//        l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
+//        l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
      }
-     else
-     {
-        /*do nothing (the line is already awake)*/
-     };
 
   //END DROWSY -----------------------------------------------------------------------------------------------------------
    
