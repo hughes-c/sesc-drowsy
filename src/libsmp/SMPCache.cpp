@@ -24,6 +24,9 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "Cache.h"
 
 #include "MESIProtocol.h"
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 // This cache works under the assumption that caches above it in the memory
 // hierarchy are write-through caches
@@ -75,6 +78,7 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
 
   if (lowerLevel != NULL)
     addLowerLevel(lowerLevel);
+  std::ofstream myfile ("totals.txt");
 
   cache = CacheType::create(section, "", name);
   I(cache);
@@ -198,7 +202,9 @@ SMPCache::~SMPCache()
    std::cout << this->getSymbolicName() << "\n";
    
    Line **content= cache->getContent();
-   
+
+   const char* DataCache;
+
    uint assoc = cache->getAssoc();
    uint numSets = cache->getNumSets();
    uint numLines =cache->getNumLines();
@@ -224,9 +230,58 @@ SMPCache::~SMPCache()
         	 }
         	 else
         	 {
-        		// l->setSleepTime(l->getSleepTime()+l->getLastAwake()-l->getLastSleep());
+        		//do nothing line is awake
         	 }
-           std::cout << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t" << l->getPerformanceLoss() <<  "\n";
+
+
+
+        	 if(std::string(this->getSymbolicName()).find("P(0)_D") != std::string::npos)//test for data cache
+        	 {
+        		 ofstream myfileP0 ("DL1_P0.txt", ios::out | ios::app );
+
+        	     if (myfileP0.is_open())
+
+        	        {
+
+        	           myfileP0 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
+        	           myfileP0.close();
+        	        }
+        	 }
+        	 else if(std::string(this->getSymbolicName()).find("P(1)_D") != std::string::npos)
+        	 {
+        		 ofstream myfileP1 ("DL1_P1.txt", ios::out | ios::app );
+
+        		 if (myfileP1.is_open())
+
+        		    {
+        		       myfileP1 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
+        		       myfileP1.close();
+        		    }
+        	 }
+            else if(std::string(this->getSymbolicName()).find("P(2)_D") != std::string::npos)
+            {
+            	ofstream myfileP2 ("DL1_P2.txt", ios::out | ios::app );
+
+            	if (myfileP2.is_open())
+
+        		    {
+        		       myfileP2 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
+        		       myfileP2.close();
+        		    }
+            }
+            else if(std::string(this->getSymbolicName()).find("P(3)_D") != std::string::npos)
+            {
+            	ofstream myfileP3 ("DL1_P3.txt", ios::out | ios::app );
+
+            	if (myfileP3.is_open())
+
+                   	{
+                   	   myfileP3 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
+                   	   myfileP3.close();
+                    }
+                       }
+
+
          }
 
          b++;
@@ -234,6 +289,7 @@ SMPCache::~SMPCache()
 
       index = index + 4;
    }
+
 }
 
 Time_t SMPCache::getNextFreeCycle() const

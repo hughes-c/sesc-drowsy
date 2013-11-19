@@ -695,7 +695,7 @@ void GProcessor::retire()
             if(std::string(localSource->getSymbolicName()).find("_D") != std::string::npos)//test for data cache
                localSource->sleepCacheLines();
 
-            std::cout << globalClock << "  " << localSource->getSymbolicName() << std::endl;
+          //  std::cout << globalClock << "  " << localSource->getSymbolicName() << std::endl;
          }
 
       //END DROWSY -----------------------------------------------------------------------------------------------------------
