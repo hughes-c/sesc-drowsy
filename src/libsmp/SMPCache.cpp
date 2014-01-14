@@ -199,7 +199,7 @@ SMPCache::~SMPCache()
 {
    //Under the default SMP/CMP only the DCache can be of type SMPCache
    //TODO Change this to test for DCache only if adding levels
-   std::cout << this->getSymbolicName() << "\n";
+   //std::cout << this->getSymbolicName() << "\n";
    
    Line **content= cache->getContent();
 
