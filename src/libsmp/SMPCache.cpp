@@ -77,7 +77,6 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
 
   if (lowerLevel != NULL)
     addLowerLevel(lowerLevel);
-  std::ofstream myfile ("totals.txt");
 
   cache = CacheType::create(section, "", name);
   I(cache);
@@ -344,9 +343,6 @@ void SMPCache::doRead(MemRequest *mreq)
    if (l && l->getAwake() == false)// if line is asleep
    {
       l->wakeLine();
-//      l->setAwake(true);  // wake it up
-//      l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
-//      l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
    }
 
 //END DROWSY -----------------------------------------------------------------------------------------------------------
@@ -499,18 +495,14 @@ void SMPCache::doWrite(MemRequest *mreq)
   PAddr addr = mreq->getPAddr();
   Line *l = cache->writeLine(addr);
 
-  //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-     if (l && l->getAwake() == false)// if line is asleep
-     {
-    	 l->wakeLine();
-//        l->setAwake(true);  // wake it up
-//        //l->setLastAwake(globalClock);// record when it woke up
-//        l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
-//        l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
-     }
+   if (l && l->getAwake() == false)// if line is asleep
+   {
+      l->wakeLine();
+   }
 
-  //END DROWSY -----------------------------------------------------------------------------------------------------------
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 
 
 #ifdef SESC_ENERGY
@@ -929,30 +921,26 @@ void SMPCache::writeLine(PAddr addr) {
 
 void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
 {
-  Line *l = cache->findLine(addr);
+   Line *l = cache->findLine(addr);
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
    if (l && l->getAwake() == false)// if line is asleep
    {
       l->wakeLine();
-//        l->setAwake(true);  // wake it up
-//        //l->setLastAwake(globalClock);// record when it woke up
-//        l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
-//        l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
    }
 
 //END DROWSY -----------------------------------------------------------------------------------------------------------
    
-  I(l);
+   I(l);
 
-  I(pendInvTable.find(addr) == pendInvTable.end());
-  pendInvTable[addr].outsResps = getNumCachesInUpperLevels();
-  pendInvTable[addr].cb = cb;
-  pendInvTable[addr].invalidate = true;
-  pendInvTable[addr].writeback = writeBack;
+   I(pendInvTable.find(addr) == pendInvTable.end());
+   pendInvTable[addr].outsResps = getNumCachesInUpperLevels();
+   pendInvTable[addr].cb = cb;
+   pendInvTable[addr].invalidate = true;
+   pendInvTable[addr].writeback = writeBack;
 
-  protocol->preInvalidate(l);
+   protocol->preInvalidate(l);
 
   if(!isHighestLevel()) {
     invUpperLevel(addr, cache->getLineSize(), this);

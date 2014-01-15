@@ -35,8 +35,6 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "GProcessor.h"
 #endif
 
-static int bampf;
-
 enum    ReplacementPolicy  {LRU, RANDOM};
 
 #ifdef SESC_ENERGY
@@ -146,34 +144,38 @@ template<class State, class Addr_t = uint, bool Energy=false>
   //statistics. So, only use these functions when you want to model a physical
   //read or write operation.
 
-  // Use this is for debug checks. Otherwise, a bad interface can be detected
-  CacheLine *findLineDebug(Addr_t addr) {
-    IS(goodInterface=true);
-    CacheLine *line = findLine(addr);
-    IS(goodInterface=false);
-    return line;
-  }
+   // Use this is for debug checks. Otherwise, a bad interface can be detected
+   CacheLine *findLineDebug(Addr_t addr)
+   {
+      IS(goodInterface=true);
+      CacheLine *line = findLine(addr);
+      IS(goodInterface=false);
+      return line;
+   }
 
-  // Use this when you need to change the line state but
-  // do not want to account for energy
-  CacheLine *findLineNoEffect(Addr_t addr) {
-    IS(goodInterface=true);
-    CacheLine *line = findLine(addr);
-    IS(goodInterface=false);
-    return line;
-  }
+   // Use this when you need to change the line state but
+   // do not want to account for energy
+   CacheLine *findLineNoEffect(Addr_t addr)
+   {
+      IS(goodInterface=true);
+      CacheLine *line = findLine(addr);
+      IS(goodInterface=false);
+      return line;
+   }
 
-  CacheLine *findLine(Addr_t addr) {
+  CacheLine *findLine(Addr_t addr)
+  {
     return findLinePrivate(addr);
   }
 
-  CacheLine *readLine(Addr_t addr) {
-// std::cout << "C " << std::hex << addr << "\n";
-    IS(goodInterface=true);
-    CacheLine *line = findLine(addr);
-    IS(goodInterface=false);
+   CacheLine *readLine(Addr_t addr)
+   {
+      // std::cout << "C " << std::hex << addr << "\n";
+      IS(goodInterface=true);
+      CacheLine *line = findLine(addr);
+      IS(goodInterface=false);
 
-    if(!Energy)
+      if(!Energy)
       return line;
 
 #if defined(SEP_DVFS)
@@ -182,16 +184,17 @@ template<class State, class Addr_t = uint, bool Energy=false>
     rdEnergy[line != 0 ? 0 : 1]->inc();
 #endif
 
-    return line;
-  }
+      return line;
+   }
 
-  CacheLine *writeLine(Addr_t addr) {
+   CacheLine *writeLine(Addr_t addr)
+   {
 
-    IS(goodInterface=true);
-    CacheLine *line = findLine(addr);
-    IS(goodInterface=false);
+      IS(goodInterface=true);
+      CacheLine *line = findLine(addr);
+      IS(goodInterface=false);
 
-    if(!Energy)
+      if(!Energy)
       return line;
 
 
@@ -201,56 +204,59 @@ template<class State, class Addr_t = uint, bool Energy=false>
     wrEnergy[line != 0 ? 0 : 1]->inc();
 #endif
 
-    return line;
-  }
+      return line;
+   }
 
-  CacheLine *fillLine(Addr_t addr) {
-    CacheLine *l = findLine2Replace(addr);
-    if (l==0)
+   CacheLine *fillLine(Addr_t addr)
+   {
+      CacheLine *l = findLine2Replace(addr);
+      if (l==0)
       return 0;
-    
-    l->setTag(calcTag(addr));
-    
-    return l;
-  }
+      
+      l->setTag(calcTag(addr));
+      
+      return l;
+   }
 
-  CacheLine *fillLine(Addr_t addr, Addr_t &rplcAddr, bool ignoreLocked=false) {
-    CacheLine *l = findLine2Replace(addr, ignoreLocked);
-    rplcAddr = 0;
-    if (l==0)
+   CacheLine *fillLine(Addr_t addr, Addr_t &rplcAddr, bool ignoreLocked=false)
+   {
+      CacheLine *l = findLine2Replace(addr, ignoreLocked);
+      rplcAddr = 0;
+      if (l==0)
       return 0;
-    
-    Addr_t newTag = calcTag(addr);
-    if (l->isValid()) {
+
+      Addr_t newTag = calcTag(addr);
+      if (l->isValid())
+      {
       Addr_t curTag = l->getTag();
       if (curTag != newTag) {
-        rplcAddr = calcAddr4Tag(curTag);
+         rplcAddr = calcAddr4Tag(curTag);
       }
-    }
-    
-    l->setTag(newTag);
-    
-    return l;
-  }
+      }
 
-  uint  getLineSize() const   { return lineSize;    }
-  uint  getAssoc() const      { return assoc;       }
-  uint  getLog2AddrLs() const { return log2AddrLs;  }
-  uint  getLog2Assoc() const  { return log2Assoc;   }
-  uint  getMaskSets() const   { return maskSets;    }
-  uint  getNumLines() const   { return numLines;    }
-  uint  getNumSets() const    { return sets;        }
+      l->setTag(newTag);
 
-  Addr_t calcTag(Addr_t addr)       const { return (addr >> log2AddrLs);              }
+      return l;
+   }
 
-  uint calcSet4Tag(Addr_t tag)     const { return (tag & maskSets);                  }
-  uint calcSet4Addr(Addr_t addr)   const { return calcSet4Tag(calcTag(addr));        }
+   uint  getLineSize() const   { return lineSize;    }
+   uint  getAssoc() const      { return assoc;       }
+   uint  getLog2AddrLs() const { return log2AddrLs;  }
+   uint  getLog2Assoc() const  { return log2Assoc;   }
+   uint  getMaskSets() const   { return maskSets;    }
+   uint  getNumLines() const   { return numLines;    }
+   uint  getNumSets() const    { return sets;        }
 
-  uint calcIndex4Set(uint set)    const { return (set << log2Assoc);                }
-  uint calcIndex4Tag(uint tag)    const { return calcIndex4Set(calcSet4Tag(tag));   }
-  uint calcIndex4Addr(Addr_t addr) const { return calcIndex4Set(calcSet4Addr(addr)); }
+   Addr_t calcTag(Addr_t addr)       const { return (addr >> log2AddrLs); }
 
-  Addr_t calcAddr4Tag(Addr_t tag)   const { return (tag << log2AddrLs);                   }
+   uint calcSet4Tag(Addr_t tag)     const { return (tag & maskSets); }
+   uint calcSet4Addr(Addr_t addr)   const { return calcSet4Tag(calcTag(addr)); }
+
+   uint calcIndex4Set(uint set)    const { return (set << log2Assoc); }
+   uint calcIndex4Tag(uint tag)    const { return calcIndex4Set(calcSet4Tag(tag)); }
+   uint calcIndex4Addr(Addr_t addr) const { return calcIndex4Set(calcSet4Addr(addr)); }
+
+   Addr_t calcAddr4Tag(Addr_t tag)   const { return (tag << log2AddrLs); }
 };
 
 #ifdef SESC_ENERGY
@@ -258,7 +264,8 @@ template<class State, class Addr_t = uint, bool Energy=true>
 #else
 template<class State, class Addr_t = uint, bool Energy=false>
 #endif
-class CacheAssoc : public CacheGeneric<State, Addr_t, Energy> {
+class CacheAssoc : public CacheGeneric<State, Addr_t, Energy>
+{
   using CacheGeneric<State, Addr_t, Energy>::numLines;
   using CacheGeneric<State, Addr_t, Energy>::assoc;
   using CacheGeneric<State, Addr_t, Energy>::maskAssoc;
@@ -280,21 +287,23 @@ protected:
 
   Line *findLinePrivate(Addr_t addr);
 public:
-  virtual ~CacheAssoc() {
+  virtual ~CacheAssoc()
+  {
     delete content;
     delete mem;
   }
 
-  // TODO: do an iterator. not this junk!!
-  Line *getPLine(uint l) {
-    // Lines [l..l+assoc] belong to the same set
-    I(l<numLines);
-    return content[l];
-  }
+   // TODO: do an iterator. not this junk!!
+   Line *getPLine(uint l)
+   {
+      // Lines [l..l+assoc] belong to the same set
+      I(l<numLines);
+      return content[l];
+   }
 
-  Line **getContent(void){ return content; }
+   Line **getContent(void){ return content; }
 
-  Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
+   Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
 };
 
 #ifdef SESC_ENERGY
@@ -302,7 +311,8 @@ template<class State, class Addr_t = uint, bool Energy=true>
 #else
 template<class State, class Addr_t = uint, bool Energy=false>
 #endif
-class CacheDM : public CacheGeneric<State, Addr_t, Energy> {
+class CacheDM : public CacheGeneric<State, Addr_t, Energy> 
+{
   using CacheGeneric<State, Addr_t, Energy>::numLines;
   using CacheGeneric<State, Addr_t, Energy>::goodInterface;
 
@@ -320,7 +330,8 @@ protected:
 
   Line *findLinePrivate(Addr_t addr);
 public:
-   virtual ~CacheDM() {
+   virtual ~CacheDM()
+   {
       delete content;
       delete mem;
    };
@@ -343,31 +354,34 @@ template<class State, class Addr_t = uint, bool Energy=true>
 #else
 template<class State, class Addr_t = uint, bool Energy=false>
 #endif
-class CacheDMSkew : public CacheGeneric<State, Addr_t, Energy> {
+class CacheDMSkew : public CacheGeneric<State, Addr_t, Energy> 
+{
   using CacheGeneric<State, Addr_t, Energy>::numLines;
   using CacheGeneric<State, Addr_t, Energy>::goodInterface;
 
 private:
 public:
-  typedef typename CacheGeneric<State, Addr_t, Energy>::CacheLine Line;
+   typedef typename CacheGeneric<State, Addr_t, Energy>::CacheLine Line;
 
 protected:
   
-  Line *mem;
-  Line **content;
+   Line *mem;
+   Line **content;
 
-  friend class CacheGeneric<State, Addr_t, Energy>;
-  CacheDMSkew(int size, int blksize, int addrUnit, const char *pStr);
+   friend class CacheGeneric<State, Addr_t, Energy>;
+   CacheDMSkew(int size, int blksize, int addrUnit, const char *pStr);
 
-  Line *findLinePrivate(Addr_t addr);
+   Line *findLinePrivate(Addr_t addr);
 public:
-   virtual ~CacheDMSkew() {
+   virtual ~CacheDMSkew()
+   {
       delete content;
       delete mem;
    };
 
    // TODO: do an iterator. not this junk!!
-   Line *getPLine(uint l) {
+   Line *getPLine(uint l)
+   {
       // Lines [l..l+assoc] belong to the same set
       I(l<numLines);
       return content[l];
@@ -392,30 +406,32 @@ private:
   uint64_t wakeClock;
 
 public:
-  virtual ~StateGeneric() {
-    tag = 0;
-  }
+   virtual ~StateGeneric()
+   {
+      tag = 0;
+   }
 
- uint64_t getSleepTime() const { return sleepTime; }
- void     setSleepTime(uint64_t timeIn) { sleepTime = timeIn; }
+   uint64_t getSleepTime() const { return sleepTime; }
+   void     setSleepTime(uint64_t timeIn) { sleepTime = timeIn; }
 
- uint64_t getPerformanceLoss() const { return performanceLoss; }
- void     setPerformanceLoss(uint64_t perfLoss) { performanceLoss = perfLoss; }
+   uint64_t getPerformanceLoss() const { return performanceLoss; }
+   void     setPerformanceLoss(uint64_t perfLoss) { performanceLoss = perfLoss; }
 
- uint64_t getLastSleep() const { return lastSleep; }
- void     setLastSleep(uint64_t sleepy) { lastSleep = sleepy; }
+   uint64_t getLastSleep() const { return lastSleep; }
+   void     setLastSleep(uint64_t sleepy) { lastSleep = sleepy; }
 
- bool     getAwake() const { return awakeState; }
- void     setAwake(bool awake) { awakeState = awake; }
+   bool     getAwake() const { return awakeState; }
+   void     setAwake(bool awake) { awakeState = awake; }
 
- Addr_t getTag() const { return tag; }
+   Addr_t getTag() const { return tag; }
+
+   void setTag(Addr_t a)
+   {
+      I(a);
+      tag = a;
+   }
  
- void setTag(Addr_t a) {
-   I(a);
-   tag = a;
- }
- 
- void clearTag() { tag = 0; }
+   void clearTag() { tag = 0; }
 
    void wakeLine()
    {
@@ -427,27 +443,29 @@ public:
          wakeClock = globalClock;
       }
       else
-         std::cout << "Boogety Boo!\n";
+      {
+         // Do nothing here???? std::cout << "Boogety Boo!\n";
+      }
    }
  
- void initialize(void *c)
- {
-    clearTag();
-    setSleepTime(0);
-    setPerformanceLoss(0);
-    setAwake(false);
-    setLastSleep(0);
+   void initialize(void *c)
+   {
+      clearTag();
+      setSleepTime(0);
+      setPerformanceLoss(0);
+      setAwake(false);
+      setLastSleep(0);
 
-    wakeClock = 0;
- }
+      wakeClock = 0;
+   }
 
- virtual bool isValid() const { return tag; }
+   virtual bool isValid() const { return tag; }
 
- virtual void invalidate() { clearTag(); }
+   virtual void invalidate() { clearTag(); }
 
- virtual bool isLocked() const { return false; }
+   virtual bool isLocked() const { return false; }
 
- virtual void dump(const char *str) { }
+   virtual void dump(const char *str) { }
  
 };
 
