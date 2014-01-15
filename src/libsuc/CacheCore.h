@@ -320,27 +320,22 @@ protected:
 
   Line *findLinePrivate(Addr_t addr);
 public:
-  virtual ~CacheDM() {
-    delete content;
-    delete mem;
-  };
+   virtual ~CacheDM() {
+      delete content;
+      delete mem;
+   };
 
-  // TODO: do an iterator. not this junk!!
-  Line *getPLine(uint l) {
-    // Lines [l..l+assoc] belong to the same set
-    I(l<numLines);
-    return content[l];
-  }
+   // TODO: do an iterator. not this junk!!
+   Line *getPLine(uint l)
+   {
+      // Lines [l..l+assoc] belong to the same set
+      I(l<numLines);
+      return content[l];
+   }
 
-  Line **getContent(void)
+   Line **getContent(void) { return content; }
 
-      {
-
-      return content;
-
-      }
-
-  Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
+   Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
 };
 
 #ifdef SESC_ENERGY
@@ -366,27 +361,21 @@ protected:
 
   Line *findLinePrivate(Addr_t addr);
 public:
-  virtual ~CacheDMSkew() {
-    delete content;
-    delete mem;
-  };
+   virtual ~CacheDMSkew() {
+      delete content;
+      delete mem;
+   };
 
-  // TODO: do an iterator. not this junk!!
-  Line *getPLine(uint l) {
-    // Lines [l..l+assoc] belong to the same set
-    I(l<numLines);
-    return content[l];
-  }
+   // TODO: do an iterator. not this junk!!
+   Line *getPLine(uint l) {
+      // Lines [l..l+assoc] belong to the same set
+      I(l<numLines);
+      return content[l];
+   }
 
-  Line **getContent(void)
+   Line **getContent(void) { return content;  }
 
-      {
-
-      return content;
-
-      }
-
-  Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
+   Line *findLine2Replace(Addr_t addr, bool ignoreLocked=false);
 };
 
 
@@ -428,18 +417,18 @@ public:
  
  void clearTag() { tag = 0; }
 
- void wakeLine()
- {
-	 if(globalClock != wakeClock)
-	 {
-		 awakeState = true;
-		 sleepTime = sleepTime + globalClock - lastSleep;
-		 performanceLoss = performanceLoss + 1;
-		 wakeClock = globalClock;
-	 }
-	 else
-		 std::cout << "Boogety Boo!\n";
- }
+   void wakeLine()
+   {
+      if(globalClock != wakeClock)
+      {
+         awakeState = true;
+         sleepTime = sleepTime + globalClock - lastSleep;
+         performanceLoss = performanceLoss + 1;
+         wakeClock = globalClock;
+      }
+      else
+         std::cout << "Boogety Boo!\n";
+   }
  
  void initialize(void *c)
  {

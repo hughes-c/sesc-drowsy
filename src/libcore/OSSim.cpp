@@ -551,6 +551,8 @@ OSSim::~OSSim()
   ReportTherm::stopCB();
 #endif
 
+  Report::close();
+
   free(benchRunning);
   free(reportFile);
 
@@ -1120,7 +1122,9 @@ void OSSim::simFinish()
   time_t t = time(0);
   Report::field("OSSim:endTime=%s", ctime(&t));
 
-  Report::close();
+//BUG Moved this to the destructor so that other functions could embed results in report
+//    may break func?
+//   Report::close();
 
 #ifdef SESC_THERM
   ReportTherm::stopCB();
@@ -1132,9 +1136,6 @@ void OSSim::simFinish()
   tmReport->summaryComplete();
 #endif
 
-  // hein? what is this? merge problems?
-  //  if(trace()) 
-  //  Report::close();
 }
 
 void OSSim::report(const char *str)

@@ -31,6 +31,9 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "MSHR.h"
 #include "Port.h"
 
+#include "OSSim.h"
+#include "ReportGen.h"
+
 #ifdef SESC_ENERGY
 #include "GProcessor.h"
 #include "GEnergy.h"

@@ -32,7 +32,7 @@ COPTS	:=-O3
 else
 ##############
 # gcc Compiler
-PDEFS	:=-W -Wall -Wno-unused
+PDEFS	:=-W -Wall -Wno-unused -Wno-deprecated
 CXX	=g++
 CC	=gcc
 

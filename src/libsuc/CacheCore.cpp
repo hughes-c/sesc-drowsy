@@ -332,8 +332,8 @@ typename CacheAssoc<State, Addr_t, Energy>::Line *CacheAssoc<State, Addr_t, Ener
     return *theSet;
   }
 
-  Line **lineHit=0;
-  Line **setEnd = theSet + assoc;
+  Line **lineHit = 0;
+  Line **setEnd  = theSet + assoc;
 
   // For sure that position 0 is not the line (short-cut from above)
   {

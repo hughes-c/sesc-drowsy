@@ -26,7 +26,6 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "MESIProtocol.h"
 #include <iostream>
 #include <fstream>
-using namespace std;
 
 // This cache works under the assumption that caches above it in the memory
 // hierarchy are write-through caches
@@ -199,11 +198,8 @@ SMPCache::~SMPCache()
 {
    //Under the default SMP/CMP only the DCache can be of type SMPCache
    //TODO Change this to test for DCache only if adding levels
-   //std::cout << this->getSymbolicName() << "\n";
    
    Line **content= cache->getContent();
-
-   const char* DataCache;
 
    uint assoc = cache->getAssoc();
    uint numSets = cache->getNumSets();
@@ -211,6 +207,8 @@ SMPCache::~SMPCache()
 
    uint index = 0;
 
+   const char* DataCache;
+   
    while(index < numLines)
    {
       Line **theSet = &content[index];
@@ -224,64 +222,7 @@ SMPCache::~SMPCache()
          
          if(l)
          {
-        	 if(l->getAwake()==false)
-        	 {
-        		 l->setSleepTime(l->getSleepTime()+globalClock%2000);
-        	 }
-        	 else
-        	 {
-        		//do nothing line is awake
-        	 }
-
-
-
-        	 if(std::string(this->getSymbolicName()).find("P(0)_D") != std::string::npos)//test for data cache
-        	 {
-        		 ofstream myfileP0 ("DL1_P0.txt", ios::out | ios::app );
-
-        	     if (myfileP0.is_open())
-
-        	        {
-
-        	           myfileP0 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
-        	           myfileP0.close();
-        	        }
-        	 }
-        	 else if(std::string(this->getSymbolicName()).find("P(1)_D") != std::string::npos)
-        	 {
-        		 ofstream myfileP1 ("DL1_P1.txt", ios::out | ios::app );
-
-        		 if (myfileP1.is_open())
-
-        		    {
-        		       myfileP1 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
-        		       myfileP1.close();
-        		    }
-        	 }
-            else if(std::string(this->getSymbolicName()).find("P(2)_D") != std::string::npos)
-            {
-            	ofstream myfileP2 ("DL1_P2.txt", ios::out | ios::app );
-
-            	if (myfileP2.is_open())
-
-        		    {
-        		       myfileP2 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
-        		       myfileP2.close();
-        		    }
-            }
-            else if(std::string(this->getSymbolicName()).find("P(3)_D") != std::string::npos)
-            {
-            	ofstream myfileP3 ("DL1_P3.txt", ios::out | ios::app );
-
-            	if (myfileP3.is_open())
-
-                   	{
-                   	   myfileP3 << index << "\t" << globalClock << "\t" << l->getSleepTime() << "\t\t" << l->getPerformanceLoss() <<  "\n";
-                   	   myfileP3.close();
-                    }
-                       }
-
-
+            Report::field("%s:Line%d:PerformanceLoss=%d", this->getSymbolicName(), index, l->getPerformanceLoss());
          }
 
          b++;
@@ -358,21 +299,20 @@ void SMPCache::sleepCacheLines(void)
          
          if(l)
          {
-			 if(l->getAwake() == false)
-			 {
+            if(l->getAwake() == false)
+            {
 
-				l->setSleepTime(l->getSleepTime() + 2000);
-			 }
-			 else
-			 {
-				 l->setAwake(false);
-			 }
+               l->setSleepTime(l->getSleepTime() + 2000);
+            }
+            else
+            {
+               l->setAwake(false);
+            }
          }
 
          l->setLastSleep(globalClock);
          b++;
-
-      }
+      }//end while-b
 
       index = index + 4;
    }
@@ -403,7 +343,7 @@ void SMPCache::doRead(MemRequest *mreq)
 
    if (l && l->getAwake() == false)// if line is asleep
    {
-	   l->wakeLine();
+      l->wakeLine();
 //      l->setAwake(true);  // wake it up
 //      l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
 //      l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
@@ -744,26 +684,25 @@ void SMPCache::realInvalidate(PAddr addr, ushort size, bool writeBack)
 {
    Line *l = cache->findLine(addr);// this was taken out of the while loop below SO put it back if you delete this new code
 
+   while(size)
+   {
+      Line *l = cache->findLine(addr);
 
-
-  while(size) {
-
-    
-	  Line *l = cache->findLine(addr);
-
-    if (l) {
-      nextSlot(); // counts for occupancy to invalidate line
-      I(l->isValid());
-      if (l->isDirty()) {
-        invalDirty.inc();
-	if(writeBack)
-	  doWriteBack(addr);
-      } 
-      l->invalidate();
-    }
-    addr += cache->getLineSize();
-    size -= cache->getLineSize();
-  }
+      if(l)
+      {
+         nextSlot(); // counts for occupancy to invalidate line
+         I(l->isValid());
+         if (l->isDirty())
+         {
+            invalDirty.inc();
+            if(writeBack)
+               doWriteBack(addr);
+         } 
+         l->invalidate();
+      }
+      addr += cache->getLineSize();
+      size -= cache->getLineSize();
+   }
 }
 
 // interface with protocol
@@ -992,18 +931,18 @@ void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
 {
   Line *l = cache->findLine(addr);
 
-  //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-     if (l && l->getAwake() == false)// if line is asleep
-     {
-    	 l->wakeLine();
+   if (l && l->getAwake() == false)// if line is asleep
+   {
+      l->wakeLine();
 //        l->setAwake(true);  // wake it up
 //        //l->setLastAwake(globalClock);// record when it woke up
 //        l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
 //        l->setPerformanceLoss(l->getPerformanceLoss() + 1); //record wake ups
-     }
+   }
 
-  //END DROWSY -----------------------------------------------------------------------------------------------------------
+//END DROWSY -----------------------------------------------------------------------------------------------------------
    
   I(l);
 

@@ -359,7 +359,6 @@ GProcessor::GProcessor(GMemorySystem *gm, CPU_t i, size_t numFlows)
 GProcessor::~GProcessor()
 {
 
-
 #ifdef SESC_ENERGY
    std::cerr << Id << ", ";
    for(size_t counter = 0; counter < NUM_STATES; counter++)
@@ -685,20 +684,19 @@ void GProcessor::retire()
   }
 #endif
 
-  //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
+//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-         if(globalClock >0 && globalClock% 2000 == 0)
-         {
+   if(globalClock >0 && globalClock% 2000 == 0)
+   {
+      MemObj *localSource = this->memorySystem->getDataSource();
 
-            MemObj *localSource = this->memorySystem->getDataSource();
+      if(std::string(localSource->getSymbolicName()).find("_D") != std::string::npos)//test for data cache
+         localSource->sleepCacheLines();
 
-            if(std::string(localSource->getSymbolicName()).find("_D") != std::string::npos)//test for data cache
-               localSource->sleepCacheLines();
+      //  std::cout << globalClock << "  " << localSource->getSymbolicName() << std::endl;
+   }
 
-          //  std::cout << globalClock << "  " << localSource->getSymbolicName() << std::endl;
-         }
-
-      //END DROWSY -----------------------------------------------------------------------------------------------------------
+//END DROWSY -----------------------------------------------------------------------------------------------------------
 
   robUsed.sample(ROB.size());
 
