@@ -221,7 +221,7 @@ SMPCache::~SMPCache()
          
          if(l)
          {
-            Report::field("%s:Line%d:PerformanceLoss=%d", this->getSymbolicName(), index, l->getPerformanceLoss());
+            Report::field("%s:Line%d:PerformanceLoss=%llu, SleepCycles=%llu", this->getSymbolicName(), index, l->getPerformanceLoss(), l->getSleepTime());
          }
 
          b++;
