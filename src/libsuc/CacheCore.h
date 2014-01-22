@@ -401,7 +401,7 @@ private:
   //drowsy
   uint64_t sleepTime;
   uint64_t performanceLoss;
-  bool     awakeState;
+  uint32_t awakeState;        //0=sleep, 1=pending, 2=awake
   uint64_t lastSleep;
   uint64_t wakeClock;
 
@@ -413,15 +413,12 @@ public:
 
    uint64_t getSleepTime() const { return sleepTime; }
    void     setSleepTime(uint64_t timeIn) { sleepTime = timeIn; }
-
    uint64_t getPerformanceLoss() const { return performanceLoss; }
    void     setPerformanceLoss(uint64_t perfLoss) { performanceLoss = perfLoss; }
-
    uint64_t getLastSleep() const { return lastSleep; }
    void     setLastSleep(uint64_t sleepy) { lastSleep = sleepy; }
-
-   bool     getAwake() const { return awakeState; }
-   void     setAwake(bool awake) { awakeState = awake; }
+   uint32_t getAwake() const { return awakeState; }
+   void     setAwake(uint32_t awake) { awakeState = awake; }
 
    Addr_t getTag() const { return tag; }
 
@@ -437,7 +434,7 @@ public:
    {
       if(globalClock != wakeClock)
       {
-         awakeState = true;
+         awakeState = 2;
          sleepTime = sleepTime + globalClock - lastSleep;
          performanceLoss = performanceLoss + 1;
          wakeClock = globalClock;
@@ -453,7 +450,7 @@ public:
       clearTag();
       setSleepTime(0);
       setPerformanceLoss(0);
-      setAwake(false);
+      setAwake(0);
       setLastSleep(0);
 
       wakeClock = 0;

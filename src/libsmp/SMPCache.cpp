@@ -298,15 +298,12 @@ void SMPCache::sleepCacheLines(void)
          
          if(l)
          {
-            if(l->getAwake() == false)
+            if(l->getAwake() == 0 || l->getAwake() == 1)
             {
-
                l->setSleepTime(l->getSleepTime() + 2000);
             }
-            else
-            {
-               l->setAwake(false);
-            }
+            
+            l->setAwake(0);
          }
 
          l->setLastSleep(globalClock);
@@ -339,12 +336,27 @@ void SMPCache::doRead(MemRequest *mreq)
    Line *l = cache->readLine(addr);
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-
-   if (l && l->getAwake() == false)// if line is asleep
+   if(l && l->getAwake() == 0)// if line is asleep
+   {
+      l->setAwake(1);
+      Time_t nextTry = nextSlot();
+      if(nextTry == globalClock)
+         nextTry++;         
+      doReadCB::scheduleAbs(nextTry, this, mreq);
+      
+      return;
+   }
+   else if(l && l->getAwake() == 1)// if line is pending awake
    {
       l->wakeLine();
+            
+      Time_t nextTry = nextSlot();
+      if(nextTry == globalClock)
+         nextTry++;         
+      doReadCB::scheduleAbs(nextTry, this, mreq);
+      
+      return;            
    }
-
 //END DROWSY -----------------------------------------------------------------------------------------------------------
    
   if (l && l->canBeRead()) {
@@ -358,7 +370,6 @@ void SMPCache::doRead(MemRequest *mreq)
        rdEnergy[0][DEFAULT_DVFS]->inc();
 #else
     rdEnergy[0]->inc();
-
 #endif
 
 #endif
@@ -496,12 +507,28 @@ void SMPCache::doWrite(MemRequest *mreq)
   Line *l = cache->writeLine(addr);
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-
-   if (l && l->getAwake() == false)// if line is asleep
+   if(l && l->getAwake() == 0)// if line is asleep
+   {
+      l->setAwake(1);
+      
+      Time_t nextTry = nextSlot();
+      if(nextTry == globalClock)
+         nextTry++;         
+      doWriteCB::scheduleAbs(nextTry, this, mreq);
+      
+      return;
+   }
+   else if(l && l->getAwake() == 1)// if line is pending awake
    {
       l->wakeLine();
+      
+      Time_t nextTry = nextSlot();
+      if(nextTry == globalClock)
+         nextTry++;         
+      doWriteCB::scheduleAbs(nextTry, this, mreq);
+      
+      return;
    }
-
 //END DROWSY -----------------------------------------------------------------------------------------------------------
 
 
@@ -613,23 +640,6 @@ void SMPCache::specialOp(MemRequest *mreq)
 void SMPCache::invalidate(PAddr addr, ushort size, MemObj *oc)
 {
   Line *l = cache->findLine(addr);
-
-/*
-//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-
-   if (l && l->getAwake() == false)
-   {
-      l->setAwake(true);                                         //line is now awake
-      l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());     //total cycles this line has been asleep
-      l->setPerformanceLoss(l->getPerformanceLoss() + 1);        //keep track of how many times we had to wake up
-   }
-   else
-   {
-      do nothing (the line is already awake)
-   };
-
-//END DROWSY -----------------------------------------------------------------------------------------------------------
-*/
 
   I(oc);
   I(pendInvTable.find(addr) == pendInvTable.end());
@@ -923,13 +933,12 @@ void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
 {
    Line *l = cache->findLine(addr);
 
+//not sure that we need to wake the line on an invalidate; just change the v bit
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-
-   if (l && l->getAwake() == false)// if line is asleep
-   {
-      l->wakeLine();
-   }
-
+//    if (l && l->getAwake() == 0)// if line is asleep
+//    {
+//       l->wakeLine();
+//    }
 //END DROWSY -----------------------------------------------------------------------------------------------------------
    
    I(l);
