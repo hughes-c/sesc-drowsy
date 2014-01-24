@@ -110,7 +110,7 @@ public:
   virtual unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) = 0;
 #endif
 
-  virtual void sleepCacheLines(void) = 0;
+  virtual void sleepCacheLines(CPU_t Id) = 0;
 
   //This assumes single entry point for object, which I do not like,
   //but it is still something that is worthwhile.
@@ -148,7 +148,7 @@ protected:
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) { return 0; /*warnings*/ };
 #endif
 
-  void sleepCacheLines(void) {};
+  void sleepCacheLines(CPU_t Id) {};
 
 public:
   DummyMemObj();

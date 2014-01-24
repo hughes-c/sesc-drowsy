@@ -50,7 +50,7 @@ public:
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
-  void sleepCacheLines(void) {};
+  void sleepCacheLines(CPU_t Id) {};
 
   // MemObj Interface (only for highest level cache)
   void access(MemRequest *mreq);

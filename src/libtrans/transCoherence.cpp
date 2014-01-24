@@ -402,13 +402,22 @@ GCMFinalRet transCoherence::beginEE(int pid, icode_ptr picode)
       //!  If we had just aborted, we need to now invalidate all the memory addresses we touched
       if(transState[pid].state == ABORTING)
       {
+         std::map< int, std::vector< RAddr > * >::iterator myIter = writeSetList.find(pid);
+         if(myIter != writeSetList.end())
+            delete writeSetList[pid];
+
+         writeSetList[pid] = new std::vector< RAddr >;
+      
          std::map<RAddr, cacheState>::iterator it;
          for(it = permCache.begin(); it != permCache.end(); ++it)
          {
+            if(it->second.writers.count(pid) > 0)
+               writeSetList[pid]->push_back(it->first);
+         
             it->second.writers.erase(pid);
             it->second.readers.erase(pid);
          }
-
+         
          transState[pid].state = ABORTED;
          abortCount[pid] = abortCount[pid] + 1;
       }
@@ -637,11 +646,20 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
             clearAborts();
          }
 
+         std::map< int, std::vector< RAddr > * >::iterator myIter = writeSetList.find(pid);
+         if(myIter != writeSetList.end())
+            delete writeSetList[pid];
+
+         writeSetList[pid] = new std::vector< RAddr >;
+         
          std::map<RAddr, cacheState>::iterator it;
          for(it = permCache.begin(); it != permCache.end(); ++it)
          {
-         writeSetSize += it->second.writers.erase(pid);
-         it->second.readers.erase(pid);
+            if(it->second.writers.count(pid) > 0)
+               writeSetList[pid]->push_back(it->first);
+            
+            writeSetSize += it->second.writers.erase(pid);
+            it->second.readers.erase(pid);            
          }
 
          retVal.writeSetSize = writeSetSize;
@@ -1032,6 +1050,12 @@ struct GCMFinalRet transCoherence::commitLL(int pid, int tid)
          #endif
       }
 
+      std::map< int, std::vector< RAddr > * >::iterator myIter = writeSetList.find(pid);
+      if(myIter != writeSetList.end())
+         delete writeSetList[pid];
+
+      writeSetList[pid] = new std::vector< RAddr >;
+      
       std::map<RAddr, cacheState>::iterator it;
       std::set<int>::iterator setIt;
 
@@ -1042,6 +1066,8 @@ struct GCMFinalRet transCoherence::commitLL(int pid, int tid)
         //!  If we have written to this address, we must abort everyone who read/wrote to it
         if(didWrite)
         {
+          writeSetList[pid]->push_back(it->first);
+          
           //!  Increase our write set
           writeSetSize++;
           //!  Abort all who wrote to this
@@ -1187,6 +1213,52 @@ size_t transCoherence::get_stallTime()
 }
 
 
+uint32_t transCoherence::checkPermCache(int pid, RAddr caddr)
+{
+   for(std::map<RAddr, cacheState>::iterator it = permCache.begin(); it != permCache.end(); ++it)
+   {
+      if(addrToCacheLine(it->first) == caddr)
+         if(it->second.readers.count(pid) > 0 || it->second.writers.count(pid) > 0)
+            return 1;
+   }
+   
+   return 0;
 
+//    std::map<RAddr, cacheState>::iterator it;
+//    it = permCache.find(caddr);
 
+//    //! If the cache line has not been instantiated in our map, then no one is using it
+//    if(it == permCache.end())
+//       return 0;
+//    else if(it->second.readers.count(pid) > 0 || it->second.writers.count(pid) > 0) 
+//       return 1;
+//    else
+//       return 0;
+}
+ 
+uint32_t transCoherence::checkWriteSetList(int pid, RAddr caddr)
+{
+   std::map< int, std::vector< RAddr > * >::iterator myIterA = writeSetList.find(pid);
+   if(myIterA != writeSetList.end())
+   {
+      for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
+         if(addrToCacheLine(*myIter) == caddr)
+            return 1;
+   }
+   
+   return 0;
+}
 
+std::vector< RAddr > * transCoherence::getWriteSetList(int pid)
+{
+   std::map< int, std::vector< RAddr > * >::iterator myIterA = writeSetList.find(pid);
+   if(myIterA != writeSetList.end())
+   {
+      std::cout << "Write Set for P" << pid << "(" << writeSetList[pid]->size() << "):  ";
+      for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
+         std::cout << std::hex << *myIter << ", ";
+      std::cout << std::dec << std::endl;
+
+      return writeSetList[pid];
+   }
+}

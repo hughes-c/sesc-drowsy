@@ -105,7 +105,15 @@ class transCoherence{
     bool     useConflictProbability;                                   // Use conflict algorithm
     bool     useTMSerialization;                                       // Use serialization algorithm
     bool     useAbortGating;                                           // Use clock gate on abort -- immediate
-
+    
+    uint32_t checkPermCache(int pid, RAddr caddr);
+    uint32_t checkWriteSetList(int pid, RAddr caddr);
+    std::vector< RAddr > * getReadSetList(int pid);
+    std::vector< RAddr > * getWriteSetList(int pid);
+    
+    std::map< int, std::vector< RAddr > * > writeSetList;
+    std::map< int, std::vector< RAddr > * > readSetList;
+    
     bool checkAbort(int pid, int tid);
     int  getVersioning(void);
     int  getConflictDetection(void) { return conflictDetection; }
@@ -205,8 +213,8 @@ class transCoherence{
 
     FILE *out;
 
-    std::map<RAddr, cacheState>     permCache;     //!< The cache ownership
-    struct tmState             transState[MAX_CPU_COUNT];
+    std::map<RAddr, cacheState>    permCache;      //!< The cache ownership
+    struct tmState                 transState[MAX_CPU_COUNT];
 
 };
 

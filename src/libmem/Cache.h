@@ -344,7 +344,7 @@ public:
 
    #endif
 
-   void sleepCacheLines(void) {};
+   void sleepCacheLines(CPU_t Id) {};
 };
 
 class WBCache : public Cache {

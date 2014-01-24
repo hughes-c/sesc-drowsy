@@ -275,7 +275,7 @@ void SMPCache::access(MemRequest *mreq)
    // which is what we are assuming)
 }
 
-void SMPCache::sleepCacheLines(void)
+void SMPCache::sleepCacheLines(CPU_t Id)
 {
    Line **content= cache->getContent() ;
    
@@ -295,6 +295,38 @@ void SMPCache::sleepCacheLines(void)
          Line **b = theSet;
          
          while(b < setEnd)
+         {
+            Line *l = *b;
+            
+            if(l)
+            {
+               if(l->getAwake() == 0 || l->getAwake() == 1)
+               {
+                  l->setSleepTime(l->getSleepTime() + 2000);
+               }
+               
+               l->setAwake(0);
+            }
+
+            l->setLastSleep(globalClock);
+            b++;
+         }//end while-b
+
+         index = index + 4;
+      }
+   }
+   else if(sleepType == 2)
+   {
+      while(index < numLines)
+      {
+         Line **theSet = &content[index];
+         Line **setEnd = theSet + assoc;
+
+         Line **b = theSet;
+
+         //if this falls on a sleep-all cycle, then we don't want to sleep anything that's in the current read OR write set
+         //nor do we want to sleep anything in the previous write set
+         while(b < setEnd && transGCM->checkPermCache(Id, index) != 1 && transGCM->checkWriteSetList(Id, index) != 1)
          {
             Line *l = *b;
             
@@ -339,7 +371,7 @@ void SMPCache::doRead(MemRequest *mreq)
    Line *l = cache->readLine(addr);
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-   if(sleepType == 1)
+   if(sleepType != 0)
    {
       if(l && l->getAwake() == 0)// if line is asleep
       {
@@ -513,7 +545,7 @@ void SMPCache::doWrite(MemRequest *mreq)
   Line *l = cache->writeLine(addr);
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-   if(sleepType == 1)
+   if(sleepType != 0)
    {
       if(l && l->getAwake() == 0)// if line is asleep
       {

@@ -129,7 +129,7 @@ public:
   unsigned int fakeCommit(unsigned int processorID, unsigned int versioning) {};
 #endif
 
-  void sleepCacheLines(void) {};
+  void sleepCacheLines(CPU_t Id) {};
 };
 
 #endif // MARKOVPREFETCHER_H
