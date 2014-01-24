@@ -42,6 +42,8 @@ MemObj::MemObj(const char *section, const char *sName)
   highest = false;
   nUpperCaches = 0;
   
+  sleepType = SescConf->getInt("CacheSleep","useDrowsy");
+  
 #ifdef DEBUG
   static std::set<const char *, Setltstr> usedNames;
   if( sName ) {

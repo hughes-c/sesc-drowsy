@@ -285,32 +285,35 @@ void SMPCache::sleepCacheLines(void)
 
    uint index = 0;
 
-   while(index < numLines)
+   if(sleepType == 1)
    {
-      Line **theSet = &content[index];
-      Line **setEnd = theSet + assoc;
-
-      Line **b = theSet;
-      
-      while(b < setEnd)
+      while(index < numLines)
       {
-         Line *l = *b;
+         Line **theSet = &content[index];
+         Line **setEnd = theSet + assoc;
+
+         Line **b = theSet;
          
-         if(l)
+         while(b < setEnd)
          {
-            if(l->getAwake() == 0 || l->getAwake() == 1)
-            {
-               l->setSleepTime(l->getSleepTime() + 2000);
-            }
+            Line *l = *b;
             
-            l->setAwake(0);
-         }
+            if(l)
+            {
+               if(l->getAwake() == 0 || l->getAwake() == 1)
+               {
+                  l->setSleepTime(l->getSleepTime() + 2000);
+               }
+               
+               l->setAwake(0);
+            }
 
-         l->setLastSleep(globalClock);
-         b++;
-      }//end while-b
+            l->setLastSleep(globalClock);
+            b++;
+         }//end while-b
 
-      index = index + 4;
+         index = index + 4;
+      }
    }
 
 }
@@ -336,26 +339,29 @@ void SMPCache::doRead(MemRequest *mreq)
    Line *l = cache->readLine(addr);
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-   if(l && l->getAwake() == 0)// if line is asleep
+   if(sleepType == 1)
    {
-      l->setAwake(1);
-      Time_t nextTry = nextSlot();
-      if(nextTry == globalClock)
-         nextTry++;         
-      doReadCB::scheduleAbs(nextTry, this, mreq);
-      
-      return;
-   }
-   else if(l && l->getAwake() == 1)// if line is pending awake
-   {
-      l->wakeLine();
-            
-      Time_t nextTry = nextSlot();
-      if(nextTry == globalClock)
-         nextTry++;         
-      doReadCB::scheduleAbs(nextTry, this, mreq);
-      
-      return;            
+      if(l && l->getAwake() == 0)// if line is asleep
+      {
+         l->setAwake(1);
+         Time_t nextTry = nextSlot();
+         if(nextTry == globalClock)
+            nextTry++;         
+         doReadCB::scheduleAbs(nextTry, this, mreq);
+         
+         return;
+      }
+      else if(l && l->getAwake() == 1)// if line is pending awake
+      {
+         l->wakeLine();
+               
+         Time_t nextTry = nextSlot();
+         if(nextTry == globalClock)
+            nextTry++;         
+         doReadCB::scheduleAbs(nextTry, this, mreq);
+         
+         return;            
+      }
    }
 //END DROWSY -----------------------------------------------------------------------------------------------------------
    
@@ -507,27 +513,30 @@ void SMPCache::doWrite(MemRequest *mreq)
   Line *l = cache->writeLine(addr);
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-   if(l && l->getAwake() == 0)// if line is asleep
+   if(sleepType == 1)
    {
-      l->setAwake(1);
-      
-      Time_t nextTry = nextSlot();
-      if(nextTry == globalClock)
-         nextTry++;         
-      doWriteCB::scheduleAbs(nextTry, this, mreq);
-      
-      return;
-   }
-   else if(l && l->getAwake() == 1)// if line is pending awake
-   {
-      l->wakeLine();
-      
-      Time_t nextTry = nextSlot();
-      if(nextTry == globalClock)
-         nextTry++;         
-      doWriteCB::scheduleAbs(nextTry, this, mreq);
-      
-      return;
+      if(l && l->getAwake() == 0)// if line is asleep
+      {
+         l->setAwake(1);
+         
+         Time_t nextTry = nextSlot();
+         if(nextTry == globalClock)
+            nextTry++;         
+         doWriteCB::scheduleAbs(nextTry, this, mreq);
+         
+         return;
+      }
+      else if(l && l->getAwake() == 1)// if line is pending awake
+      {
+         l->wakeLine();
+         
+         Time_t nextTry = nextSlot();
+         if(nextTry == globalClock)
+            nextTry++;         
+         doWriteCB::scheduleAbs(nextTry, this, mreq);
+         
+         return;
+      }
    }
 //END DROWSY -----------------------------------------------------------------------------------------------------------
 
@@ -932,14 +941,6 @@ void SMPCache::writeLine(PAddr addr) {
 void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
 {
    Line *l = cache->findLine(addr);
-
-//not sure that we need to wake the line on an invalidate; just change the v bit
-//BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
-//    if (l && l->getAwake() == 0)// if line is asleep
-//    {
-//       l->wakeLine();
-//    }
-//END DROWSY -----------------------------------------------------------------------------------------------------------
    
    I(l);
 

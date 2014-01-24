@@ -55,6 +55,8 @@ protected:
 
   const char *descrSection;
   const char *symbolicName;
+  
+  uint sleepType;
 
   void addLowerLevel(MemObj *obj) {
     I( obj );
