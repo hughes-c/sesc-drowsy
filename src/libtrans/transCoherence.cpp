@@ -143,6 +143,9 @@ transCoherence::transCoherence(FILE* out, int conflicts, int versioning, int cac
    {
       nackArray[counter] = -1;
       nackState[counter] = 0;
+      
+      writeSetList[counter] = new std::vector< RAddr >;
+      readSetList[counter]  = new std::vector< RAddr >;
    }
 }
 
@@ -402,10 +405,7 @@ GCMFinalRet transCoherence::beginEE(int pid, icode_ptr picode)
       //!  If we had just aborted, we need to now invalidate all the memory addresses we touched
       if(transState[pid].state == ABORTING)
       {
-         std::map< int, std::vector< RAddr > * >::iterator myIter = writeSetList.find(pid);
-         if(myIter != writeSetList.end())
-            delete writeSetList[pid];
-
+         delete writeSetList[pid];
          writeSetList[pid] = new std::vector< RAddr >;
       
          std::map<RAddr, cacheState>::iterator it;
@@ -646,10 +646,7 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
             clearAborts();
          }
 
-         std::map< int, std::vector< RAddr > * >::iterator myIter = writeSetList.find(pid);
-         if(myIter != writeSetList.end())
-            delete writeSetList[pid];
-
+         delete writeSetList[pid];
          writeSetList[pid] = new std::vector< RAddr >;
          
          std::map<RAddr, cacheState>::iterator it;
@@ -1050,10 +1047,8 @@ struct GCMFinalRet transCoherence::commitLL(int pid, int tid)
          #endif
       }
 
-      std::map< int, std::vector< RAddr > * >::iterator myIter = writeSetList.find(pid);
-      if(myIter != writeSetList.end())
-         delete writeSetList[pid];
 
+      delete writeSetList[pid];
       writeSetList[pid] = new std::vector< RAddr >;
       
       std::map<RAddr, cacheState>::iterator it;
@@ -1212,53 +1207,41 @@ size_t transCoherence::get_stallTime()
    }
 }
 
-
-uint32_t transCoherence::checkPermCache(int pid, RAddr caddr)
+std::map< RAddr, uint32_t >* transCoherence::currentSets(uint log2AddrLs, uint maskSets, uint log2Assoc, int pid)
 {
+   uint set;
+   std::map< RAddr, uint32_t >* currentSets = new std::map< RAddr, uint32_t >;
+   
    for(std::map<RAddr, cacheState>::iterator it = permCache.begin(); it != permCache.end(); ++it)
    {
-      if(addrToCacheLine(it->first) == caddr)
-         if(it->second.readers.count(pid) > 0 || it->second.writers.count(pid) > 0)
-            return 1;
+      set = ((addrToCacheLine(it->first) >> log2AddrLs) & maskSets) << log2Assoc;
+//       std::cout << std::hex << "addr:  " << it->first << "  addr->line:  " << set << std::dec << "\n";
+      if(it->second.readers.count(pid) > 0 || it->second.writers.count(pid) > 0)
+      {
+         (*currentSets)[set] = 1;
+      }
    }
    
-   return 0;
-
-//    std::map<RAddr, cacheState>::iterator it;
-//    it = permCache.find(caddr);
-
-//    //! If the cache line has not been instantiated in our map, then no one is using it
-//    if(it == permCache.end())
-//       return 0;
-//    else if(it->second.readers.count(pid) > 0 || it->second.writers.count(pid) > 0) 
-//       return 1;
-//    else
-//       return 0;
+   return currentSets;
 }
  
 uint32_t transCoherence::checkWriteSetList(int pid, RAddr caddr)
 {
-   std::map< int, std::vector< RAddr > * >::iterator myIterA = writeSetList.find(pid);
-   if(myIterA != writeSetList.end())
-   {
-      for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
-         if(addrToCacheLine(*myIter) == caddr)
-            return 1;
-   }
+
+   for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
+      if(addrToCacheLine(*myIter) == caddr)
+         return 1;
    
    return 0;
 }
 
 std::vector< RAddr > * transCoherence::getWriteSetList(int pid)
 {
-   std::map< int, std::vector< RAddr > * >::iterator myIterA = writeSetList.find(pid);
-   if(myIterA != writeSetList.end())
-   {
-      std::cout << "Write Set for P" << pid << "(" << writeSetList[pid]->size() << "):  ";
-      for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
-         std::cout << std::hex << *myIter << ", ";
-      std::cout << std::dec << std::endl;
 
-      return writeSetList[pid];
-   }
+   std::cout << "Write Set for P" << pid << "(" << writeSetList[pid]->size() << "):  ";
+   for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
+      std::cout << std::hex << *myIter << ", ";
+   std::cout << std::dec << std::endl;
+
+   return writeSetList[pid];
 }

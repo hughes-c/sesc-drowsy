@@ -279,7 +279,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 {
    Line **content= cache->getContent() ;
    
-   uint assoc = cache->getAssoc();
+   uint assoc   = cache->getAssoc();
    uint numSets = cache->getNumSets();
    uint numLines =cache->getNumLines();
 
@@ -317,6 +317,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
    }
    else if(sleepType == 2)
    {
+      std::map< RAddr, uint32_t >* currentSets = transGCM->currentSets(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id);
       while(index < numLines)
       {
          Line **theSet = &content[index];
@@ -326,12 +327,12 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
          //if this falls on a sleep-all cycle, then we don't want to sleep anything that's in the current read OR write set
          //nor do we want to sleep anything in the previous write set
-         while(b < setEnd && transGCM->checkPermCache(Id, index) != 1 && transGCM->checkWriteSetList(Id, index) != 1)
+         while(b < setEnd && currentSets->count(index) != 0)
          {
             Line *l = *b;
-            
+//             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
             if(l)
-            {
+            {                                   
                if(l->getAwake() == 0 || l->getAwake() == 1)
                {
                   l->setSleepTime(l->getSleepTime() + 2000);
@@ -345,7 +346,10 @@ void SMPCache::sleepCacheLines(CPU_t Id)
          }//end while-b
 
          index = index + 4;
+
       }
+      
+      delete currentSets;
    }
 
 }

@@ -106,10 +106,11 @@ class transCoherence{
     bool     useTMSerialization;                                       // Use serialization algorithm
     bool     useAbortGating;                                           // Use clock gate on abort -- immediate
     
-    uint32_t checkPermCache(int pid, RAddr caddr);
+    std::map< RAddr, uint32_t >* currentSets(uint log2AddrLs, uint maskSets, uint log2Assoc, int pid);
     uint32_t checkWriteSetList(int pid, RAddr caddr);
-    std::vector< RAddr > * getReadSetList(int pid);
-    std::vector< RAddr > * getWriteSetList(int pid);
+    std::vector< RAddr >* getReadSetList(int pid);
+    std::vector< RAddr >* getWriteSetList(int pid);
+    const std::map< RAddr, cacheState >* getPermCache(void) const { return &permCache; }
     
     std::map< int, std::vector< RAddr > * > writeSetList;
     std::map< int, std::vector< RAddr > * > readSetList;
