@@ -1207,9 +1207,9 @@ size_t transCoherence::get_stallTime()
    }
 }
 
-std::map< RAddr, uint32_t >* transCoherence::currentSets(uint log2AddrLs, uint maskSets, uint log2Assoc, int pid)
+std::map< RAddr, uint32_t >* transCoherence::getCurrentSets(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid)
 {
-   uint set;
+   uint32_t set;
    std::map< RAddr, uint32_t >* currentSets = new std::map< RAddr, uint32_t >;
    
    for(std::map<RAddr, cacheState>::iterator it = permCache.begin(); it != permCache.end(); ++it)
@@ -1225,23 +1225,17 @@ std::map< RAddr, uint32_t >* transCoherence::currentSets(uint log2AddrLs, uint m
    return currentSets;
 }
  
-uint32_t transCoherence::checkWriteSetList(int pid, RAddr caddr)
+uint32_t transCoherence::checkWriteSetList(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr)
 {
+   uint32_t set;
 
    for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
-      if(addrToCacheLine(*myIter) == caddr)
+   {
+      set = ((addrToCacheLine(*myIter) >> log2AddrLs) & maskSets) << log2Assoc;
+      if(set == caddr)
          return 1;
+   }
    
    return 0;
 }
 
-std::vector< RAddr > * transCoherence::getWriteSetList(int pid)
-{
-
-   std::cout << "Write Set for P" << pid << "(" << writeSetList[pid]->size() << "):  ";
-   for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
-      std::cout << std::hex << *myIter << ", ";
-   std::cout << std::dec << std::endl;
-
-   return writeSetList[pid];
-}
