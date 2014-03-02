@@ -1,4 +1,4 @@
-/* 
+/*
    SESC: Super ESCalar simulator
    Copyright (C) 2003 University of Illinois.
 
@@ -59,12 +59,12 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
   , readHit("%s:readHit", name)
   , writeHit("%s:writeHit", name)
   , readMiss("%s:readMiss", name)
-  , writeMiss("%s:writeMiss", name)  
+  , writeMiss("%s:writeMiss", name)
   , readHalfMiss("%s:readHalfMiss", name)
   , writeHalfMiss("%s:writeHalfMiss", name)
   , writeBack("%s:writeBack", name)
   , linePush("%s:linePush", name)
-  , lineFill("%s:lineFill", name) 
+  , lineFill("%s:lineFill", name)
   , readRetry("%s:readRetry", name)
   , writeRetry("%s:writeRetry", name)
   , invalDirty("%s:invalDirty", name)
@@ -86,14 +86,14 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
     protocol = new MESIProtocol(this, name);
   } else {
     MSG("unknown protocol, using MESI");
-    protocol = new MESIProtocol(this, name);    
+    protocol = new MESIProtocol(this, name);
   }
 
   SescConf->isInt(section, "numPorts");
   SescConf->isInt(section, "portOccp");
 
-  cachePort = PortGeneric::create(name, 
-                                  SescConf->getInt(section, "numPorts"), 
+  cachePort = PortGeneric::create(name,
+                                  SescConf->getInt(section, "numPorts"),
                                   SescConf->getInt(section, "portOccp"));
 
   // MSHR is used as an outstanding request buffer
@@ -102,15 +102,15 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
   sprintf(outsReqName, "%s", name);
 
   const char *mshrSection = SescConf->getCharPtr(section,"MSHR");
-  
+
   outsReq = MSHR<PAddr,SMPCache>::create(outsReqName, mshrSection);
 
   if (mutExclBuffer == NULL)
-    mutExclBuffer = MSHR<PAddr,SMPCache>::create("mutExclBuffer", 
+    mutExclBuffer = MSHR<PAddr,SMPCache>::create("mutExclBuffer",
 				  SescConf->getCharPtr(mshrSection, "type"),
                                   32000,
                                   SescConf->getInt(mshrSection, "bsize"));
-  
+
   SescConf->isInt(section, "hitDelay");
   hitDelay = SescConf->getInt(section, "hitDelay");
 
@@ -193,11 +193,11 @@ SMPCache::SMPCache(SMemorySystem *dms, const char *section, const char *name)
 #endif
 }
 
-SMPCache::~SMPCache() 
+SMPCache::~SMPCache()
 {
    //Under the default SMP/CMP only the DCache can be of type SMPCache
    //TODO Change this to test for DCache only if adding levels
-   
+
    Line **content= cache->getContent();
 
    uint assoc = cache->getAssoc();
@@ -207,18 +207,18 @@ SMPCache::~SMPCache()
    uint index = 0;
 
    const char* DataCache;
-   
+
    while(index < numLines)
    {
       Line **theSet = &content[index];
       Line **setEnd = theSet + assoc;
 
       Line **b = theSet;
-      
+
       while(b < setEnd)
       {
          Line *l = *b;
-         
+
          if(l)
          {
             Report::field("%s:Line%d:PerformanceLoss=%llu, SleepCycles=%llu", this->getSymbolicName(), index, l->getPerformanceLoss(), l->getSleepTime());
@@ -258,10 +258,10 @@ void SMPCache::access(MemRequest *mreq)
 
    switch(mreq->getMemOperation())
    {
-      case MemRead:  read(mreq);          break; 
+      case MemRead:  read(mreq);          break;
       case MemWrite: /*I(cache->findLine(mreq->getPAddr())); will be transformed
                         to MemReadW later */
-      case MemReadW: write(mreq);         break; 
+      case MemReadW: write(mreq);         break;
       case MemPush:  I(0);                break; // assumed write-through upperlevel
       default:       specialOp(mreq);     break;
    }
@@ -278,7 +278,7 @@ void SMPCache::access(MemRequest *mreq)
 void SMPCache::sleepCacheLines(CPU_t Id)
 {
    Line **content= cache->getContent() ;
-   
+
    uint assoc   = cache->getAssoc();
    uint numSets = cache->getNumSets();
    uint numLines =cache->getNumLines();
@@ -293,18 +293,18 @@ void SMPCache::sleepCacheLines(CPU_t Id)
          Line **setEnd = theSet + assoc;
 
          Line **b = theSet;
-         
+
          while(b < setEnd)
          {
             Line *l = *b;
-            
+
             if(l)
             {
                if(l->getAwake() == 0 || l->getAwake() == 1)
                {
                   l->setSleepTime(l->getSleepTime() + 2000);
                }
-               
+
                l->setAwake(0);
             }
 
@@ -314,8 +314,40 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
          index = index + 4;
       }
-   }
+   }//end sleepType 1
    else if(sleepType == 2)
+   {
+      while(index < numLines)
+      {
+         Line **theSet = &content[index];
+         Line **setEnd = theSet + assoc;
+
+         Line **b = theSet;
+
+         //if this falls on a sleep-all cycle, then we don't want to sleep anything that's in prediction sets
+         while(b < setEnd && transGCM->checkPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) != 1)
+         {
+            Line *l = *b;
+//             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
+            if(l)
+            {
+               if(l->getAwake() == 0 || l->getAwake() == 1)
+               {
+                  l->setSleepTime(l->getSleepTime() + 2000);
+               }
+
+               l->setAwake(0);
+            }
+
+            l->setLastSleep(globalClock);
+            b++;
+         }//end while-b
+
+         index = index + 4;
+
+      }
+   }//end sleepType 2
+   else if(sleepType == 99)
    {
       std::map< RAddr, uint32_t >* currentSets = transGCM->getCurrentSets(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id);
       while(index < numLines)
@@ -332,12 +364,12 @@ void SMPCache::sleepCacheLines(CPU_t Id)
             Line *l = *b;
 //             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
             if(l)
-            {                                   
+            {
                if(l->getAwake() == 0 || l->getAwake() == 1)
                {
                   l->setSleepTime(l->getSleepTime() + 2000);
                }
-               
+
                l->setAwake(0);
             }
 
@@ -348,12 +380,10 @@ void SMPCache::sleepCacheLines(CPU_t Id)
          index = index + 4;
 
       }
-      
+
       delete currentSets;
-   }
-
+   }//end sleepType xx
 }
-
 
 void SMPCache::read(MemRequest *mreq)
 {
@@ -382,25 +412,25 @@ void SMPCache::doRead(MemRequest *mreq)
          l->setAwake(1);
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
-            nextTry++;         
+            nextTry++;
          doReadCB::scheduleAbs(nextTry, this, mreq);
-         
+
          return;
       }
       else if(l && l->getAwake() == 1)// if line is pending awake
       {
          l->wakeLine();
-               
+
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
-            nextTry++;         
+            nextTry++;
          doReadCB::scheduleAbs(nextTry, this, mreq);
-         
-         return;            
+
+         return;
       }
    }
 //END DROWSY -----------------------------------------------------------------------------------------------------------
-   
+
   if (l && l->canBeRead()) {
     readHit.inc();
 #ifdef SESC_ENERGY
@@ -431,7 +461,7 @@ void SMPCache::doRead(MemRequest *mreq)
 
   GI(l, !l->isLocked());
 
-  readMiss.inc(); 
+  readMiss.inc();
 
 #ifdef SESC_ENERGY
 
@@ -461,11 +491,11 @@ void SMPCache::sendRead(MemRequest* mreq)
 }
 
 void SMPCache::write(MemRequest *mreq)
-{  
+{
   PAddr addr = mreq->getPAddr();
-  
+
   if (!outsReq->issue(addr)) {
-    outsReq->addEntry(addr, doWriteCB::create(this, mreq), 
+    outsReq->addEntry(addr, doWriteCB::create(this, mreq),
                             doWriteCB::create(this, mreq));
     writeHalfMiss.inc();
     return;
@@ -554,23 +584,23 @@ void SMPCache::doWrite(MemRequest *mreq)
       if(l && l->getAwake() == 0)// if line is asleep
       {
          l->setAwake(1);
-         
+
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
-            nextTry++;         
+            nextTry++;
          doWriteCB::scheduleAbs(nextTry, this, mreq);
-         
+
          return;
       }
       else if(l && l->getAwake() == 1)// if line is pending awake
       {
          l->wakeLine();
-         
+
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
-            nextTry++;         
+            nextTry++;
          doWriteCB::scheduleAbs(nextTry, this, mreq);
-         
+
          return;
       }
    }
@@ -679,7 +709,7 @@ void SMPCache::concludeWriteBack(Time_t initialTime)
 
 void SMPCache::specialOp(MemRequest *mreq)
 {
-  mreq->goUp(1); 
+  mreq->goUp(1);
 }
 
 void SMPCache::invalidate(PAddr addr, ushort size, MemObj *oc)
@@ -744,7 +774,7 @@ void SMPCache::realInvalidate(PAddr addr, ushort size, bool writeBack)
             invalDirty.inc();
             if(writeBack)
                doWriteBack(addr);
-         } 
+         }
          l->invalidate();
       }
       addr += cache->getLineSize();
@@ -790,7 +820,7 @@ void SMPCache::doReceiveFromBelow(SMPMemRequest *sreq)
   }
 
   if(memOp == MemReadW) {
-    if(sreq->needsData()) 
+    if(sreq->needsData())
       protocol->writeMissHandler(sreq);
     else
       protocol->invalidateHandler(sreq);
@@ -816,7 +846,7 @@ void SMPCache::returnAccess(MemRequest *mreq)
 
     if(memOp == MemRead) {
       protocol->readMissAckHandler(sreq);
-    } 
+    }
     else if(memOp == MemReadW) {
       if(sreq->needsData()) {
         protocol->writeMissAckHandler(sreq);
@@ -824,7 +854,7 @@ void SMPCache::returnAccess(MemRequest *mreq)
 	I(sreq->needsSnoop());
         protocol->invalidateAckHandler(sreq);
       }
-    } 
+    }
     else if(memOp == MemWrite) {
       I(!sreq->needsData());
       I(sreq->needsSnoop());
@@ -861,7 +891,7 @@ void SMPCache::concludeAccess(MemRequest *mreq)
 
 }
 
-SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb, 
+SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb,
 				       bool canDestroyCB)
 {
   PAddr rpl_addr = 0;
@@ -887,12 +917,12 @@ SMPCache::Line *SMPCache::allocateLine(PAddr addr, CallbackBase *cb,
     l->setTag(cache->calcTag(addr));
     return l;
   }
-  
+
   if(isHighestLevel()) {
     if(l->isDirty()) {
       allocDirty.inc();
       doWriteBack(rpl_addr);
-    } 
+    }
 
     if(canDestroyCB)
       cb->destroy();
@@ -945,7 +975,7 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
     return;
   }
 
-  Line *l = cache->findLine(rpl_addr); 
+  Line *l = cache->findLine(rpl_addr);
   I(l && l->isLocked());
 
   if(l->isDirty()) {
@@ -963,7 +993,7 @@ void SMPCache::doAllocateLine(PAddr addr, PAddr rpl_addr, CallbackBase *cb)
 
 SMPCache::Line *SMPCache::getLine(PAddr addr)
 {
-  nextSlot(); 
+  nextSlot();
   return cache->findLine(addr);
 }
 
@@ -977,7 +1007,7 @@ void SMPCache::writeLine(PAddr addr) {
 void SMPCache::invalidateLine(PAddr addr, CallbackBase *cb, bool writeBack)
 {
    Line *l = cache->findLine(addr);
-   
+
    I(l);
 
    I(pendInvTable.find(addr) == pendInvTable.end());

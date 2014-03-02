@@ -143,16 +143,22 @@ transCoherence::transCoherence(FILE* out, int conflicts, int versioning, int cac
    {
       nackArray[counter] = -1;
       nackState[counter] = 0;
-      
-      writeSetList[counter] = new std::vector< RAddr >;
-      readSetList[counter]  = new std::vector< RAddr >;
+
+      writeSetList[counter] = new std::set< RAddr >;
+
+      readPredictionSet[counter]  = new std::set< RAddr >;
+
+      for(size_t counterB = 0; counterB < SHRINK_HISTORY; counterB++)
+      {
+         readPredictionSetList[counter].push_back(new std::set< RAddr >);
+      }
    }
 }
 
 /**
  * @ingroup transCoherence
  * @brief   Create new cache state reference with Read bit set
- * 
+ *
  * @param pid   Process ID
  * @return     Cache state
  */
@@ -167,7 +173,7 @@ struct cacheState transCoherence::newReadState(int pid)
 /**
  * @ingroup transCoherence
  * @brief   Create new cache state reference with Write bit set
- * 
+ *
  * @param pid   Process ID
  * @return Cache state
  */
@@ -182,7 +188,7 @@ struct cacheState transCoherence::newWriteState(int pid)
 /**
  * @ingroup transCoherence
  * @brief check to see if thread has been ordered to abort
- * 
+ *
  * @param pid Process ID
  * @param tid Thread ID
  * @return Abort?
@@ -206,7 +212,7 @@ bool transCoherence::checkAbort(int pid, int tid)
 /**
  * @ingroup transCoherence
  * @brief   eager eager read
- * 
+ *
  * @param pid   Process ID
  * @param tid   Thread ID
  * @param raddr Real address
@@ -265,13 +271,17 @@ GCMRet transCoherence::readEE(int pid, int tid, RAddr raddr)
       retval = SUCCESS;
    }
 
+   //check to see if the address is present in n of the four previous read sets
+   if(checkReadPredictionSetList(pid, caddr) != 0)
+      updatePredictionSet(caddr);
+
    return retval;
 }
 
 /**
  * @ingroup transCoherence
  * @brief   eager eager write
- * 
+ *
  * @param pid   Process ID
  * @param tid   Thread ID
  * @param raddr Real address
@@ -379,7 +389,7 @@ GCMRet transCoherence::writeEE(int pid, int tid, RAddr raddr)
 /**
  * @ingroup transCoherence
  * @brief   eager eager begin
- * 
+ *
  * @param pid   Process ID
  * @param picode Instruction code
  * @return  Final coherency status
@@ -406,18 +416,19 @@ GCMFinalRet transCoherence::beginEE(int pid, icode_ptr picode)
       if(transState[pid].state == ABORTING)
       {
          delete writeSetList[pid];
-         writeSetList[pid] = new std::vector< RAddr >;
-      
+         writeSetList[pid] = new std::set< RAddr >;
+
          std::map<RAddr, cacheState>::iterator it;
          for(it = permCache.begin(); it != permCache.end(); ++it)
          {
+            //add all of the write addresses to the write set list before deleting them
             if(it->second.writers.count(pid) > 0)
-               writeSetList[pid]->push_back(it->first);
-         
+               writeSetList[pid]->insert(it->first);
+
             it->second.writers.erase(pid);
             it->second.readers.erase(pid);
          }
-         
+
          transState[pid].state = ABORTED;
          abortCount[pid] = abortCount[pid] + 1;
       }
@@ -533,7 +544,7 @@ GCMFinalRet transCoherence::beginEE(int pid, icode_ptr picode)
 /**
  * @ingroup transCoherence
  * @brief   eager eager abort
- * 
+ *
  * @param pthread SESC pointer to thread
  * @param tid    Thread ID
  * @return Final coherency status
@@ -561,7 +572,20 @@ struct GCMFinalRet transCoherence::abortEE(thread_ptr pthread, int tid)
 
    std::map<RAddr, cacheState>::iterator it;
    for(it = permCache.begin(); it != permCache.end(); ++it)
+   {
       writeSetSize += it->second.writers.count(pid);
+
+      //add all of the write addresses to the prediction set list before deleting them
+      if(it->second.writers.count(pid) > 0)
+         updatePredictionSet(it->first);
+
+      //add read addresses to the read predictionSet
+      if(it->second.readers.count(pid) > 0)
+         readPredictionSet[pid]->insert(it->first);
+   }
+
+   updateReadPredictionSetList(pid, readPredictionSet[pid]);
+   readPredictionSet[pid] = new std::set< RAddr >;
 
    retVal.writeSetSize = writeSetSize;
 
@@ -573,7 +597,7 @@ struct GCMFinalRet transCoherence::abortEE(thread_ptr pthread, int tid)
 /**
  * @ingroup transCoherence
  * @brief   eager eager commit
- * 
+ *
  * @param pid   Process ID
  * @param tid    Thread ID
  * @return Final coherency status
@@ -646,18 +670,30 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
             clearAborts();
          }
 
+         //good Tx so delete the previous write set
          delete writeSetList[pid];
-         writeSetList[pid] = new std::vector< RAddr >;
-         
+         writeSetList[pid] = new std::set< RAddr >;
+
          std::map<RAddr, cacheState>::iterator it;
          for(it = permCache.begin(); it != permCache.end(); ++it)
          {
+            //add all of the write addresses to the write set list before deleting them
             if(it->second.writers.count(pid) > 0)
-               writeSetList[pid]->push_back(it->first);
-            
+               writeSetList[pid]->insert(it->first);
+
+            //add read addresses to the read predictionSet
+            if(it->second.readers.count(pid) > 0)
+               readPredictionSet[pid]->insert(it->first);
+
             writeSetSize += it->second.writers.erase(pid);
-            it->second.readers.erase(pid);            
+            it->second.readers.erase(pid);
          }
+
+         updateReadPredictionSetList(pid, readPredictionSet[pid]);
+         readPredictionSet[pid] = new std::set< RAddr >;
+
+         //clean up the prediction sets for the next tx
+         clearPredictionSet();
 
          retVal.writeSetSize = writeSetSize;
          retVal.ret = SUCCESS;
@@ -677,6 +713,7 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
          retVal.tuid = transState[pid].utid;
          return retVal;
       }
+
    }
 
 }
@@ -687,7 +724,7 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
  **************************************/
 
 /*
-  * The Read function is much simpler in the Lazy approach since 
+  * The Read function is much simpler in the Lazy approach since
   * we do not have to worry about conflict detection.  We always
   * permit accecss and simply record the information.
 */
@@ -695,7 +732,7 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
 /**
  * @ingroup transCoherence
  * @brief   lazy lazy read
- * 
+ *
  * @param pid   Process ID
  * @param tid    Thread ID
  * @param raddr  Real address
@@ -737,12 +774,16 @@ GCMRet transCoherence::readLL(int pid, int tid, RAddr raddr)
       retval = SUCCESS;
    }
 
+   //check to see if the address is present in n of the four previous read sets
+   if(checkReadPredictionSetList(pid, caddr) != 0)
+      updatePredictionSet(caddr);
+
    return retval;
 }
 
 
 /*
-  * The Write function is much simpler in the Lazy approach since 
+  * The Write function is much simpler in the Lazy approach since
   * we do not have to worry about conflict detection.  We always
   * permit accecss and simply record the information.
 */
@@ -750,7 +791,7 @@ GCMRet transCoherence::readLL(int pid, int tid, RAddr raddr)
 /**
  * @ingroup transCoherence
  * @brief   lazy lazy write
- * 
+ *
  * @param pid   Process ID
  * @param tid    Thread ID
  * @param raddr Real address
@@ -797,7 +838,7 @@ GCMRet transCoherence::writeLL(int pid, int tid, RAddr raddr)
 /**
  * @ingroup transCoherence
  * @brief lazy lazy begin
- * 
+ *
  * @param pid   Process ID
  * @param picode SESC icode pointer
  * @return Final coherency status
@@ -927,7 +968,7 @@ GCMFinalRet transCoherence::beginLL(int pid, icode_ptr picode)
 /**
  * @ingroup transCoherence
  * @brief lazy lazy abort
- * 
+ *
  * @param pthread SESC thread pointer
  * @param tid    Thread ID
  * @return Final coherency status
@@ -953,6 +994,23 @@ struct GCMFinalRet transCoherence::abortLL(thread_ptr pthread, int tid)
       #endif
    }
 
+   std::map<RAddr, cacheState>::iterator it;
+   for(it = permCache.begin(); it != permCache.end(); ++it)
+   {
+      writeSetSize += it->second.writers.count(pid);
+
+      //add all of the write addresses to the write set list before deleting them
+      if(it->second.writers.count(pid) > 0)
+         updatePredictionSet(it->first);
+
+      //add read addresses to the read predictionSet
+      if(it->second.readers.count(pid) > 0)
+         readPredictionSet[pid]->insert(it->first);
+   }
+
+   updateReadPredictionSetList(pid, readPredictionSet[pid]);
+   readPredictionSet[pid] = new std::set< RAddr >;
+
    //!  We can't just decriment because we should be going back to the original begin, so tmDepth[pid] = 0
    tmDepth[pid]=0;
 
@@ -968,7 +1026,7 @@ struct GCMFinalRet transCoherence::abortLL(thread_ptr pthread, int tid)
 /**
  * @ingroup transCoherence
  * @brief lazy lazy commit
- * 
+ *
  * @param pid   Process ID
  * @param tid    Thread ID
  * @return Final coherency status
@@ -1047,22 +1105,27 @@ struct GCMFinalRet transCoherence::commitLL(int pid, int tid)
          #endif
       }
 
-
+      //good Tx so clean up the write set list
       delete writeSetList[pid];
-      writeSetList[pid] = new std::vector< RAddr >;
-      
+      writeSetList[pid] = new std::set< RAddr >;
+
       std::map<RAddr, cacheState>::iterator it;
       std::set<int>::iterator setIt;
 
       for(it = permCache.begin(); it != permCache.end(); ++it)
       {
+         //add read addresses to the read predictionSet
+         if(it->second.readers.count(pid) > 0)
+            readPredictionSet[pid]->insert(it->first);
+
         didWrite = it->second.writers.erase(pid);
 
         //!  If we have written to this address, we must abort everyone who read/wrote to it
         if(didWrite)
         {
-          writeSetList[pid]->push_back(it->first);
-          
+          //add all of the write addresses to the write set list before deleting them
+          writeSetList[pid]->insert(it->first);
+
           //!  Increase our write set
           writeSetSize++;
           //!  Abort all who wrote to this
@@ -1088,6 +1151,12 @@ struct GCMFinalRet transCoherence::commitLL(int pid, int tid)
         else
           it->second.readers.erase(pid);
       }
+
+      updateReadPredictionSetList(pid, readPredictionSet[pid]);
+      readPredictionSet[pid] = new std::set< RAddr >;
+
+      //clean up the prediction sets for the next tx
+      clearPredictionSet();
 
       currentCommitter = -1;  //!  Allow other transaction to commit again
       retVal.writeSetSize = writeSetSize;
@@ -1124,8 +1193,8 @@ struct GCMFinalRet transCoherence::commitLL(int pid, int tid)
 ///-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- * 
- * @param processElement 
+ *
+ * @param processElement
  */
 void transCoherence::releaseNackedPE(int processElement)
 {
@@ -1144,10 +1213,10 @@ void transCoherence::releaseNackedPE(int processElement)
 }
 
 /**
- * 
- * @param procID 
- * @param state 
- * @return 
+ *
+ * @param procID
+ * @param state
+ * @return
  */
 bool transCoherence::set_nackArray(int procID, int state)
 {
@@ -1163,9 +1232,9 @@ bool transCoherence::set_nackArray(int procID, int state)
 }
 
 /**
- * 
- * @param procID 
- * @return 
+ *
+ * @param procID
+ * @return
  */
 int transCoherence::get_nackArray(int procID)
 {
@@ -1211,31 +1280,91 @@ std::map< RAddr, uint32_t >* transCoherence::getCurrentSets(uint32_t log2AddrLs,
 {
    uint32_t set;
    std::map< RAddr, uint32_t >* currentSets = new std::map< RAddr, uint32_t >;
-   
+
    for(std::map<RAddr, cacheState>::iterator it = permCache.begin(); it != permCache.end(); ++it)
    {
       set = ((addrToCacheLine(it->first) >> log2AddrLs) & maskSets) << log2Assoc;
-//       std::cout << std::hex << "addr:  " << it->first << "  addr->line:  " << set << std::dec << "\n";
       if(it->second.readers.count(pid) > 0 || it->second.writers.count(pid) > 0)
       {
          (*currentSets)[set] = 1;
       }
    }
-   
+
    return currentSets;
 }
- 
+
 uint32_t transCoherence::checkWriteSetList(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr)
 {
    uint32_t set;
 
-   for(std::vector< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
+   for(std::set< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
    {
       set = ((addrToCacheLine(*myIter) >> log2AddrLs) & maskSets) << log2Assoc;
       if(set == caddr)
          return 1;
    }
-   
+
    return 0;
 }
 
+uint32_t transCoherence::clearReadPredictionSet(int pid)
+{
+   delete readPredictionSet[pid];
+   readPredictionSet[pid] = new std::set< RAddr >;
+
+   return 0;
+}
+
+uint32_t transCoherence::checkReadPredictionSetList(int pid, RAddr caddr)
+{
+   uint32_t count;
+
+   count = 0;
+   for(std::list< std::set< RAddr > * >::iterator myIter = readPredictionSetList[pid].begin(); myIter !=readPredictionSetList[pid].end(); ++myIter)
+   {
+      if((*myIter)->count(caddr) != 0)
+         count = count + 1;
+   }
+
+   if(count >= SHRINK_THRESHOLD)
+      return 1;
+   else
+      return 0;
+
+}
+
+uint32_t transCoherence::updateReadPredictionSetList(int pid, std::set< RAddr > * incList)
+{
+   delete readPredictionSetList[pid].back();
+   readPredictionSetList[pid].pop_back();
+
+   readPredictionSetList[pid].push_front(incList);
+
+   return 0;
+}
+
+uint32_t transCoherence::updatePredictionSet(std::set< RAddr > * addrList)
+{
+   for(std::set< RAddr >::iterator myIter = addrList->begin(); myIter != addrList->end(); ++myIter)
+   {
+      predictionSet.insert(*myIter);
+   }
+
+   return 0;
+}
+
+uint32_t transCoherence::checkPredictionSet(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr)
+{
+   uint32_t set;
+
+   for(std::set< RAddr >::iterator myIter = predictionSet.begin(); myIter != predictionSet.end(); ++myIter)
+   {
+      set = ((addrToCacheLine(*myIter) >> log2AddrLs) & maskSets) << log2Assoc;
+      if(set == caddr)
+      {
+         return 1;
+      }
+   }
+
+   return 0;
+}

@@ -55,8 +55,8 @@ protected:
 
   const char *descrSection;
   const char *symbolicName;
-  
-  uint sleepType;
+
+  uint sleepType;   //Set from useDrowsy in config -- 0 = nothing; 1 = baseline drowsy; 2 = drowsy/shrink-thingie
 
   void addLowerLevel(MemObj *obj) {
     I( obj );

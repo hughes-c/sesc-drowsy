@@ -9,7 +9,7 @@
  *
  * @section DESCRIPTION
  * C++ Interface: transCoherence \n
- * This object provides the functional coherence. 
+ * This object provides the functional coherence.
  *
  * @note
  * Commits/Aborts have two phases.  The first induces the stall, the second is where all of the
@@ -23,12 +23,16 @@
 
 #include <map>
 #include <set>
+#include <list>
 #include <vector>
 
 #include "icode.h"
 
 #define NACK_STATES 4
 #define MAX_CPU_COUNT 2048
+
+#define SHRINK_HISTORY   4
+#define SHRINK_THRESHOLD 2
 
 class GProcessor;
 
@@ -105,15 +109,28 @@ class transCoherence{
     bool     useConflictProbability;                                   // Use conflict algorithm
     bool     useTMSerialization;                                       // Use serialization algorithm
     bool     useAbortGating;                                           // Use clock gate on abort -- immediate
-    
-    std::map< RAddr, uint32_t >* getCurrentSets(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid);
-    uint32_t checkWriteSetList(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr);
-    
+
+    //BEGIN Shrink-Pwr Stuff
     const std::map< RAddr, cacheState >* getPermCache(void) const { return &permCache; }
-    
-    std::map< int, std::vector< RAddr > * > writeSetList;
-    std::map< int, std::vector< RAddr > * > readSetList;
-    
+    std::map< RAddr, uint32_t >* getCurrentSets(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid);
+
+    std::map< int, std::set< RAddr > * > writeSetList;
+    uint32_t checkWriteSetList(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr);
+
+    std::map< int, std::set< RAddr > * > readPredictionSet;
+    uint32_t clearReadPredictionSet(int pid);
+
+    std::map< int, std::list< std::set< RAddr > * > > readPredictionSetList;
+    uint32_t checkReadPredictionSetList(int pid, RAddr caddr);
+    uint32_t updateReadPredictionSetList(int pid, std::set< RAddr > * incList);
+
+    std::set< RAddr > predictionSet;
+    uint32_t clearPredictionSet(void) { predictionSet.clear(); };
+    uint32_t updatePredictionSet(std::set< RAddr > * addrList);
+    uint32_t updatePredictionSet(RAddr caddr) { predictionSet.insert(caddr); };
+    uint32_t checkPredictionSet(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr);
+    //END Shrink-Pwr Stuff
+
     bool checkAbort(int pid, int tid);
     int  getVersioning(void);
     int  getConflictDetection(void) { return conflictDetection; }
