@@ -1,4 +1,4 @@
-/* 
+/*
    SESC: Super ESCalar simulator
    Copyright (C) 2003 University of Illinois.
 
@@ -134,17 +134,17 @@ extern "C" void signalCatcher(int sig)
 void OSSim::reportOnTheFly(const char *file)
 {
   char *tmp;
-  
+
   if( !file )
     file = reportFile;
 
   tmp = (char *)malloc(strlen(file));
   strcpy(tmp,file);
-  
+
   Report::openFile(tmp);
 
   SescConf->dump();
-  
+
   report("Signal");
 
   Report::close();
@@ -153,10 +153,10 @@ void OSSim::reportOnTheFly(const char *file)
 }
 
 OSSim::OSSim(int argc, char **argv, char **envp)
-  : traceFile(0) 
-    ,snapshotGlobalClock(0)    
+  : traceFile(0)
+    ,snapshotGlobalClock(0)
     ,finishWorkNowCB(&cpus)
-{ 
+{
   I(osSim == 0);
   osSim = this;
 
@@ -185,7 +185,7 @@ OSSim::OSSim(int argc, char **argv, char **envp)
   // different depending of the machine where the simulator is
   // running. This produces different results. Incredible but true
   // (ask Basilio if you don't believe it)
-  char *nenv[2]; 
+  char *nenv[2];
   nenv[0] = 0;
   processParams(argc,argv,nenv);
 #else
@@ -223,13 +223,13 @@ void OSSim::processParams(int argc, char **argv, char **envp)
   const char *x6="XXXXXX";
 
 #endif
-  
+
   bool trace_flag = false;
 
   // Change, add parameters to mint
   char **nargv = (char **)malloc((20+argc)*sizeof(char *));
   int nargc;
-  
+
   nargv[0] = strdup(argv[0]);
 
   int i=1;
@@ -271,7 +271,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
 #ifdef TS_PROFILING
     fprintf(stderr,"\t-rINT       ; Define the profiling phase\n");
     fprintf(stderr,"\t-STEXT      ; The section in configuration file should be used\n");
-#endif    
+#endif
     fprintf(stderr,"\t-sINT       ; Total amount of shared memory reserved\n");
     fprintf(stderr,"\t-hINT       ; Total amount of heap memory reserved\n");
     fprintf(stderr,"\t-kINT       ; Stack size per thread\n");
@@ -282,7 +282,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
 #endif // !TRACE_DRIVEN
     exit(0);
   }
-  
+
   for(; i < argc; i++) {
     if(argv[i][0] == '-') {
       if( argv[i][1] == 'w' ){
@@ -304,7 +304,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
       else if( argv[i][1] == 'm' ) {
         useMTMarks=true;
         simMarks.mtMarks=true;
-        if( argv[i][2] != 0 ) 
+        if( argv[i][2] != 0 )
           mtId = strtol(&argv[i][2], 0, 0 );
         else {
           i++;
@@ -350,7 +350,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
           simMarks.total = 0;
       }
 
-#ifdef TS_PROFILING        
+#ifdef TS_PROFILING
       else if( argv[i][1] == 'r' ) {
         if( argv[i][2] != 0 )
           profPhase = strtol(&argv[i][2], 0, 0 );
@@ -366,7 +366,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
           profSectionName = argv[i];
         }
       }
-#endif        
+#endif
       else if( argv[i][1] == 'b' ) {
         if( argv[i][2] != 0 )
           benchSection = &argv[i][2];
@@ -402,7 +402,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
           reportTo = argv[i];
         }
       }
-      
+
       else if( argv[i][1] == 'f' ) {
         I(extension==0);
         if( argv[i][2] != 0 )
@@ -450,7 +450,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
 #ifndef QEMU_DRIVEN
   nargv[ni++]= strdup("--");
 #endif
-  
+
   for(; i < argc; i++) {
     nargv[ni] = strdup(argv[i]);
     ni++;
@@ -475,7 +475,7 @@ void OSSim::processParams(int argc, char **argv, char **envp)
         sprintf(reportFile, "sesc_%s.%s", benchName, extension ? extension : x6);
     }
   }
- 
+
   char *finalReportFile = (char *)strdup(reportFile);
   Report::openFile(finalReportFile);
 
@@ -537,10 +537,10 @@ void OSSim::processParams(int argc, char **argv, char **envp)
     free(nargv[i]);
 
   free(nargv);
-  
+
 }
 
-OSSim::~OSSim() 
+OSSim::~OSSim()
 {
 #if (defined TLS)
   tls::Epoch::staticDestructor();
@@ -551,7 +551,7 @@ OSSim::~OSSim()
   ReportTherm::stopCB();
 #endif
 
-  Report::close();
+//   Report::close();
 
   free(benchRunning);
   free(reportFile);
@@ -597,7 +597,7 @@ void OSSim::eventSpawn(Pid_t ppid, Pid_t fid, int flags, bool stopped)
 {
   if (NoMigration)
     flags |= SESC_FLAG_NOMIGRATE;
-  
+
   LOG("OSSim::spawn(%d,%d,0x%lx,%d)", ppid, fid, flags,stopped);
   ProcessId *procId = ProcessId::create(ppid, fid, flags);
 
@@ -674,22 +674,22 @@ int OSSim::getPriority(Pid_t pid)
   I(proc);
   // Return the priority of the process
   return proc->getPriority();
-  
+
 }
 
-void OSSim::tryWakeupParent(Pid_t cpid) 
+void OSSim::tryWakeupParent(Pid_t cpid)
 {
   ProcessId *proc = ProcessId::getProcessId(cpid);
   I(proc);
   Pid_t ppid = proc->getPPid();
   if (ppid < 0)
     return;
-  
+
   ProcessId *pproc = ProcessId::getProcessId(ppid);
   // Does the parent process still exist?
   if(pproc == 0)
     return;
-  
+
   if(pproc->getState()==WaitingState) {
     LOG("Waiting pid(%d) is awaked (child %d call)",ppid,cpid);
     pproc->setState(InvalidState);
@@ -709,7 +709,7 @@ void OSSim::eventExit(Pid_t cpid, int err)
   tryWakeupParent(cpid);
   // Destroy the process
   proc->destroy();
-  // Free the ThreadContext  
+  // Free the ThreadContext
 #ifdef TASKSCALAR
   // Do not recycle pid 0 in TaskScalar
   if (cpid)
@@ -719,7 +719,7 @@ void OSSim::eventExit(Pid_t cpid, int err)
   ThreadContext::getContext(cpid)->free();
 #endif
 #endif
- 
+
 #ifdef SESC_THERM
 //   ReportTherm::stopCB();
 #endif
@@ -799,7 +799,7 @@ icode_ptr OSSim::eventGetInstructionPointer(Pid_t pid)
 #else
   if(pid < 0) // -1
     return &invalidIcode;
-  
+
   ProcessId *proc = ProcessId::getProcessId(pid);
   if(proc&&(proc->getState()==RunningState)){
     CPU_t cpu=proc->getCPU();
@@ -828,7 +828,7 @@ Pid_t OSSim::eventGetPPid(Pid_t pid)
 {
   ProcessId *proc = ProcessId::getProcessId(pid);
   I(proc);
-  return proc->getPPid();  
+  return proc->getPPid();
 }
 
 void OSSim::eventSetPPid(Pid_t pid, Pid_t ppid)
@@ -969,7 +969,7 @@ void OSSim::initBoot()
   TaskContext::preBoot();
 #endif
 
-  // read it so it gets dumped 
+  // read it so it gets dumped
   const char *technology = SescConf->getCharPtr("","technology");
   frequency = SescConf->getDouble(technology,"frequency");
 
@@ -1015,12 +1015,12 @@ void OSSim::preBoot()
 
   Report::field("OSSim:bench=%s", benchRunning);
   Report::field("OSSim:benchName=%s", benchName);
-  if( nInst2Skip ) 
+  if( nInst2Skip )
     Report::field("OSSim:rabbit=%lld",nInst2Skip);
 
   if( nInst2Sim )
     Report::field("OSSim:nInst2Sim=%lld",nInst2Sim);
-  else{// 0 would never stop 
+  else{// 0 would never stop
     nInst2Sim = ((~0ULL) - 1024)/2;
   }
 
@@ -1029,11 +1029,11 @@ void OSSim::preBoot()
 #ifdef QEMU_DRIVEN
   n_inst_stop = nInst2Sim;
   n_inst_start= nInst2Skip;
-#endif  
+#endif
 
 #ifdef TS_PROFILING
   profiler = new Profile();
-#endif  
+#endif
 
 
 #ifdef TS_RISKLOADPROF
@@ -1064,12 +1064,12 @@ void OSSim::preBoot()
     unsigned i=0;
 
     MSG("Start Skipping Initialization (multithreaded mode)...");
-    
+
     GProcessor *proc = pid2GProcessor(0);
     proc->goRabbitMode(1);
-    
+
     I(cpus.getProcessor(0)==proc);
-    
+
     I( idSimMarks.size() < cpus.size() );
 
 #if 0
@@ -1124,7 +1124,7 @@ void OSSim::simFinish()
 
 //BUG Moved this to the destructor so that other functions could embed results in report
 //    may break func?
-//   Report::close();
+  Report::close();
 
 #ifdef SESC_THERM
   ReportTherm::stopCB();
@@ -1280,7 +1280,7 @@ GProcessor *OSSim::pid2GProcessor(Pid_t pid)
   signed int cpu = ProcessId::getProcessId(pid)->getCPU();
   // -1 when it has never started to execute
   I(cpu>=0);
-    
+
   return cpus.getProcessor(cpu);
 }
 
@@ -1294,7 +1294,7 @@ GProcessor *OSSim::id2GProcessor(CPU_t cpu)
 {
   I(cpus.getProcessor(cpu));
   I(cpus.getProcessor(cpu)->getId() == cpu);
-    
+
   return cpus.getProcessor(cpu);
 }
 
@@ -1327,7 +1327,7 @@ Pid_t OSSim::contextSwitch(CPU_t cpu, Pid_t nPid)
   // If already running on the target processor, do nothing
   if(runCpu==cpu)
     return -1;
-  // If target core has no available flows, make one     
+  // If target core has no available flows, make one
   if(!newCore->availableFlows()){
     oldPid=newCore->findVictimPid();
     ProcessId *oldProc=ProcessId::getProcessId(oldPid);

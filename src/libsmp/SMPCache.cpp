@@ -208,6 +208,14 @@ SMPCache::~SMPCache()
 
    const char* DataCache;
 
+   //sleep reporting file
+   char appendMe[] = "-sleep";
+   char *tempFile = (char *)malloc(strlen(osSim->getReportFileName()) + strlen(appendMe) + 1);
+   strcpy(tempFile, osSim->getReportFileName());
+   strcat(tempFile, appendMe);
+
+   Report::openFile(tempFile);
+
    while(index < numLines)
    {
       Line **theSet = &content[index];
@@ -229,6 +237,9 @@ SMPCache::~SMPCache()
 
       index = index + 4;
    }
+
+   Report::close();
+   free(tempFile);
 
 }
 
@@ -324,6 +335,9 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
          Line **b = theSet;
 
+//          if(transGCM->checkPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) > 0)
+//             std::cerr << "Prediction:  " << index << "\n";
+
          //if this falls on a sleep-all cycle, then we don't want to sleep anything that's in prediction sets
          while(b < setEnd && transGCM->checkPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) != 1)
          {
@@ -357,9 +371,15 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
          Line **b = theSet;
 
+//          if(currentSets->count(index) > 0)
+//             std::cerr << "Current:  " << index << "\n";
+//
+//          if(transGCM->checkWriteSetList(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) == 1)
+//             std::cerr << "PrevWr:  " << index << "\n";
+
          //if this falls on a sleep-all cycle, then we don't want to sleep anything that's in the current read OR write set
          //nor do we want to sleep anything in the previous write set
-         while(b < setEnd && currentSets->count(index) != 0 && transGCM->checkWriteSetList(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) != 1)
+         while(b < setEnd && currentSets->count(index) == 0 && transGCM->checkWriteSetList(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) != 1)
          {
             Line *l = *b;
 //             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
