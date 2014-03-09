@@ -343,7 +343,7 @@ sub tradEnergyStats {
 
   print "Proc        Fetch     Issue      Mem       Exec     Clock     Total (nJ)\n";
 
-  WriteEnergyLine("EnergyMgr","Total", 1);
+  WriteEnergyLine("EnergyMgr","NRG_Tot", 1);
 }
 
 sub WriteEnergyLine {
