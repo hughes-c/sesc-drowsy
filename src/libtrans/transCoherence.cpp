@@ -1343,14 +1343,12 @@ uint32_t transCoherence::updateReadPredictionSetList(int pid, std::set< RAddr > 
    return 0;
 }
 
-uint32_t transCoherence::updatePredictionSet(std::set< RAddr > * addrList)
+void transCoherence::updatePredictionSet(std::set< RAddr > * addrList)
 {
    for(std::set< RAddr >::iterator myIter = addrList->begin(); myIter != addrList->end(); ++myIter)
    {
       predictionSet.insert(*myIter);
    }
-
-   return 0;
 }
 
 uint32_t transCoherence::checkPredictionSet(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr)

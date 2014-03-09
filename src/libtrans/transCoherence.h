@@ -125,9 +125,9 @@ class transCoherence{
     uint32_t updateReadPredictionSetList(int pid, std::set< RAddr > * incList);
 
     std::set< RAddr > predictionSet;
-    uint32_t clearPredictionSet(void) { predictionSet.clear(); };
-    uint32_t updatePredictionSet(std::set< RAddr > * addrList);
-    uint32_t updatePredictionSet(RAddr caddr) { predictionSet.insert(caddr); };
+    void     clearPredictionSet(void) { predictionSet.clear(); };
+    void     updatePredictionSet(std::set< RAddr > * addrList);
+    void     updatePredictionSet(RAddr caddr) { predictionSet.insert(caddr); };
     uint32_t checkPredictionSet(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr);
     //END Shrink-Pwr Stuff
 
