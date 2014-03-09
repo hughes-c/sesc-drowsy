@@ -1,4 +1,4 @@
-/* 
+/*
    SESC: Super ESCalar simulator
    Copyright (C) 2003 University of Illinois.
 
@@ -45,7 +45,7 @@ template<class State, class Addr_t = uint, bool Energy=false>
   class CacheGeneric {
   private:
   static const int STR_BUF_SIZE=1024;
- 
+
   static PowerGroup getRightStat(const char* type);
 
   protected:
@@ -84,7 +84,7 @@ template<class State, class Addr_t = uint, bool Energy=false>
     // Addr_t getTag() const;
     // void setTag(Addr_t a);
     // void clearTag();
-    // 
+    //
     //
     // bool isValid() const;
     // void invalidate();
@@ -212,9 +212,9 @@ template<class State, class Addr_t = uint, bool Energy=false>
       CacheLine *l = findLine2Replace(addr);
       if (l==0)
       return 0;
-      
+
       l->setTag(calcTag(addr));
-      
+
       return l;
    }
 
@@ -311,7 +311,7 @@ template<class State, class Addr_t = uint, bool Energy=true>
 #else
 template<class State, class Addr_t = uint, bool Energy=false>
 #endif
-class CacheDM : public CacheGeneric<State, Addr_t, Energy> 
+class CacheDM : public CacheGeneric<State, Addr_t, Energy>
 {
   using CacheGeneric<State, Addr_t, Energy>::numLines;
   using CacheGeneric<State, Addr_t, Energy>::goodInterface;
@@ -321,7 +321,7 @@ public:
   typedef typename CacheGeneric<State, Addr_t, Energy>::CacheLine Line;
 
 protected:
-  
+
   Line *mem;
   Line **content;
 
@@ -354,7 +354,7 @@ template<class State, class Addr_t = uint, bool Energy=true>
 #else
 template<class State, class Addr_t = uint, bool Energy=false>
 #endif
-class CacheDMSkew : public CacheGeneric<State, Addr_t, Energy> 
+class CacheDMSkew : public CacheGeneric<State, Addr_t, Energy>
 {
   using CacheGeneric<State, Addr_t, Energy>::numLines;
   using CacheGeneric<State, Addr_t, Energy>::goodInterface;
@@ -364,7 +364,7 @@ public:
    typedef typename CacheGeneric<State, Addr_t, Energy>::CacheLine Line;
 
 protected:
-  
+
    Line *mem;
    Line **content;
 
@@ -395,7 +395,7 @@ public:
 
 template<class Addr_t=uint>
 class StateGeneric {
-private:   
+private:
   Addr_t tag;
 
   //drowsy
@@ -427,7 +427,7 @@ public:
       I(a);
       tag = a;
    }
- 
+
    void clearTag() { tag = 0; }
 
    void wakeLine()
@@ -435,8 +435,11 @@ public:
       if(globalClock != wakeClock)
       {
          awakeState = 2;
-         sleepTime = sleepTime + globalClock - lastSleep;
-         performanceLoss = performanceLoss + 1;
+         if(lastSleep != 0)
+         {
+            sleepTime = sleepTime + globalClock - lastSleep;
+            performanceLoss = performanceLoss + 1;
+         }
          wakeClock = globalClock;
       }
       else
@@ -444,7 +447,7 @@ public:
          // Do nothing here???? std::cout << "Boogety Boo!\n";
       }
    }
- 
+
    void initialize(void *c)
    {
       clearTag();
@@ -463,7 +466,7 @@ public:
    virtual bool isLocked() const { return false; }
 
    virtual void dump(const char *str) { }
- 
+
 };
 
 #ifndef CACHECORE_CPP
