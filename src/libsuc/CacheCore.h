@@ -402,10 +402,12 @@ private:
   uint64_t sleepTime;
   uint64_t performanceLoss;
   uint32_t awakeState;        //0=sleep, 1=pending, 2=awake
-  uint64_t lastSleep;
-  uint64_t wakeClock;
 
+  uint64_t wakeClock;
+  bool whyAwake;             //0=woken by read or write 1=kept awake in pred set
+  bool thereHasBeenRWs;     // true - there has been a read or write on the line since last sleep
 public:
+  uint64_t lastSleep;//changed to public to access in SMPCache
    virtual ~StateGeneric()
    {
       tag = 0;
@@ -419,6 +421,11 @@ public:
    void     setLastSleep(uint64_t sleepy) { lastSleep = sleepy; }
    uint32_t getAwake() const { return awakeState; }
    void     setAwake(uint32_t awake) { awakeState = awake; }
+   bool getWhyAwake() const { return whyAwake; }
+   void     setWhyAwake(bool predict) { whyAwake = predict; }
+   bool getThereHasBeenRWs() const { return thereHasBeenRWs; }
+   void     setThereHasBeenRWs(bool readwrite) { thereHasBeenRWs = readwrite; }
+
 
    Addr_t getTag() const { return tag; }
 
@@ -455,7 +462,8 @@ public:
       setPerformanceLoss(0);
       setAwake(0);
       setLastSleep(0);
-
+      setWhyAwake(false);
+      setThereHasBeenRWs(false);
       wakeClock = 0;
    }
 

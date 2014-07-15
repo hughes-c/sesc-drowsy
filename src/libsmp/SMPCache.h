@@ -134,6 +134,7 @@ protected:
     return cachePort->nextSlot();
   }
 
+
   // local routines
   void doRead(MemRequest *mreq);
   void doWrite(MemRequest *mreq);
@@ -159,6 +160,12 @@ protected:
 
 public:
   SMPCache(SMemorySystem *gms, const char *section, const char *name);
+  int neitherStopped;
+  int currentSetsStopped;
+  int abortPredictStopped;
+  int accurate_Prediction;
+  int inaccurate_Prediction;
+  int numofrws;
   ~SMPCache();
 
   // BEGIN MemObj interface
@@ -212,6 +219,7 @@ public:
                          &SMPCache::doAllocateLine> doAllocateLineCB;
 
   PAddr calcTag(PAddr addr) { return cache->calcTag(addr); }
+
 
   // END protocol interface
 

@@ -220,6 +220,8 @@ bool transCoherence::checkAbort(int pid, int tid)
  */
 GCMRet transCoherence::readEE(int pid, int tid, RAddr raddr)
 {
+   //l->getWhyAwake();
+
    RAddr caddr = addrToCacheLine(raddr);
    GCMRet retval = SUCCESS;
 
@@ -401,7 +403,8 @@ GCMFinalRet transCoherence::beginEE(int pid, icode_ptr picode)
    //!  Subsume all nested transactions for now
    if(tmDepth[pid]>0)
    {
-      //tmReport->registerBegin(transState[pid].utid,pid,tid,transState[pid].timestamp);
+//THIS IS WHERE I THINK WE SHOULD CALL SLEEPLINES
+	   //tmReport->registerBegin(transState[pid].utid,pid,tid,transState[pid].timestamp);
       tmDepth[pid]++;
       retVal.ret = IGNORE;
 
@@ -577,11 +580,19 @@ struct GCMFinalRet transCoherence::abortEE(thread_ptr pthread, int tid)
 
       //add all of the write addresses to the prediction set list before deleting them
       if(it->second.writers.count(pid) > 0)
+      {
+    	 updateAbortPredictionSet(it->first);//add to AbortPredSet
          updatePredictionSet(it->first);
+      }
 
-      //add read addresses to the read predictionSet
+      //add read addresses to the read predictionSet and AbortPredSet
       if(it->second.readers.count(pid) > 0)
+      {
          readPredictionSet[pid]->insert(it->first);
+         updateAbortPredictionSet(it->first);
+      }
+
+
    }
 
    updateReadPredictionSetList(pid, readPredictionSet[pid]);
@@ -694,6 +705,7 @@ struct GCMFinalRet transCoherence::commitEE(int pid, int tid)
 
          //clean up the prediction sets for the next tx
          clearPredictionSet();
+         clearAbortPredictionSet();
 
          retVal.writeSetSize = writeSetSize;
          retVal.ret = SUCCESS;
@@ -1001,11 +1013,16 @@ struct GCMFinalRet transCoherence::abortLL(thread_ptr pthread, int tid)
 
       //add all of the write addresses to the write set list before deleting them
       if(it->second.writers.count(pid) > 0)
+      {
          updatePredictionSet(it->first);
-
+         updateAbortPredictionSet(it->first);//add to AbortPredSet
+      }
       //add read addresses to the read predictionSet
       if(it->second.readers.count(pid) > 0)
+      {
          readPredictionSet[pid]->insert(it->first);
+         updateAbortPredictionSet(it->first);//add to AbortPredSet
+      }
    }
 
    updateReadPredictionSetList(pid, readPredictionSet[pid]);
@@ -1292,6 +1309,24 @@ std::map< RAddr, uint32_t >* transCoherence::getCurrentSets(uint32_t log2AddrLs,
 
    return currentSets;
 }
+uint32_t transCoherence::checkPermCache(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, uint addr)
+{
+   uint32_t permline;
+   uint32_t myline=((addrToCacheLine(addr) >> log2AddrLs) & maskSets) << log2Assoc;
+
+   std::map< RAddr, uint32_t >* currentSets = new std::map< RAddr, uint32_t >;
+
+   for(std::map<RAddr, cacheState>::iterator it = permCache.begin(); it != permCache.end(); ++it)
+   {
+      permline = ((addrToCacheLine(it->first) >> log2AddrLs) & maskSets) << log2Assoc;
+      if (permline==myline)
+          return 1;
+      else
+    	  return 0;
+   }
+
+
+}
 
 uint32_t transCoherence::checkWriteSetList(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr)
 {
@@ -1299,7 +1334,7 @@ uint32_t transCoherence::checkWriteSetList(uint32_t log2AddrLs, uint32_t maskSet
 
    for(std::set< RAddr >::iterator myIter = writeSetList[pid]->begin(); myIter != writeSetList[pid]->end(); ++myIter)
    {
-      set = ((addrToCacheLine(*myIter) >> log2AddrLs) & maskSets) << log2Assoc;
+      set = ((addrToCacheLine(*myIter) >> log2AddrLs) & maskSets);// << log2Assoc;
       if(set == caddr)
          return 1;
    }
@@ -1360,6 +1395,22 @@ uint32_t transCoherence::checkPredictionSet(uint32_t log2AddrLs, uint32_t maskSe
       set = ((addrToCacheLine(*myIter) >> log2AddrLs) & maskSets) << log2Assoc;
       if(set == caddr)
       {
+         return 1;
+      }
+   }
+
+   return 0;
+}
+uint32_t transCoherence::checkAbortPredictionSet(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr)
+{
+   uint32_t set;
+
+   for(std::set< RAddr >::iterator myIter = abortPredictionSet.begin(); myIter != abortPredictionSet.end(); ++myIter)
+   {
+      set = ((addrToCacheLine(*myIter) >> log2AddrLs) & maskSets) << log2Assoc;
+      if(set == caddr)// || set%6 != 5)
+      {
+    	 //std::cout << std::hex << *myIter << std::dec << " " <<std::flush;
          return 1;
       }
    }

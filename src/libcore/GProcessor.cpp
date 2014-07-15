@@ -686,7 +686,7 @@ void GProcessor::retire()
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-   if(globalClock > 0 && globalClock % 2000 == 0)
+   if(globalClock > 0 && globalClock % 50 == 0)
    {
       MemObj *localSource = this->memorySystem->getDataSource();
 

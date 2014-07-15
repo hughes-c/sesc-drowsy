@@ -113,7 +113,7 @@ class transCoherence{
     //BEGIN Shrink-Pwr Stuff
     const std::map< RAddr, cacheState >* getPermCache(void) const { return &permCache; }
     std::map< RAddr, uint32_t >* getCurrentSets(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid);
-
+    uint32_t checkPermCache(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, uint addr);
     std::map< int, std::set< RAddr > * > writeSetList;
     uint32_t checkWriteSetList(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr);
 
@@ -125,10 +125,14 @@ class transCoherence{
     uint32_t updateReadPredictionSetList(int pid, std::set< RAddr > * incList);
 
     std::set< RAddr > predictionSet;
+    std::set< RAddr > abortPredictionSet;
     void     clearPredictionSet(void) { predictionSet.clear(); };
+    void     clearAbortPredictionSet(void) { abortPredictionSet.clear(); };
     void     updatePredictionSet(std::set< RAddr > * addrList);
     void     updatePredictionSet(RAddr caddr) { predictionSet.insert(caddr); };
+    void     updateAbortPredictionSet(RAddr caddr) { abortPredictionSet.insert(caddr); };
     uint32_t checkPredictionSet(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr);
+    uint32_t checkAbortPredictionSet(uint32_t log2AddrLs, uint32_t maskSets, uint32_t log2Assoc, int pid, RAddr caddr);
     //END Shrink-Pwr Stuff
 
     bool checkAbort(int pid, int tid);
@@ -175,7 +179,7 @@ class transCoherence{
 
    const    std::vector< GProcessor * > *prPointer;
    void     set_prPointer(const std::vector< GProcessor * > *boo) { prPointer = boo; }
-
+   int tmDepth[MAX_CPU_COUNT];
   private:
     int           numProcs;
     float         alpha;
@@ -218,7 +222,7 @@ class transCoherence{
     int versioning;
     int cacheLineSize;
 
-    int tmDepth[MAX_CPU_COUNT];
+    //int tmDepth[MAX_CPU_COUNT];this is where is was before i moved it out of private so that i could use it in SMPcachecpp
 
     std::pair<int,RAddr> abortReason[MAX_CPU_COUNT];
 

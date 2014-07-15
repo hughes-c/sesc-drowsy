@@ -197,6 +197,12 @@ SMPCache::~SMPCache()
 {
    //Under the default SMP/CMP only the DCache can be of type SMPCache
    //TODO Change this to test for DCache only if adding levels
+std::cout<<"CurrentSets stopped a line from sleeping this many times "<<currentSetsStopped<<std::endl;
+std::cout<<"AbortPredictSet stopped a line from sleeping this many times "<<abortPredictStopped<<std::endl;
+std::cout<<"Neither stopped a line from sleeping this many times "<<neitherStopped<<std::endl;
+std::cout<<"Accurate predictions= "<<accurate_Prediction<<std::endl;
+std::cout<<"INaccurate Pred= "<<inaccurate_Prediction<<std::endl;
+std::cout<<"Total number of reads and writes is "<<numofrws<<std::endl;
 
    Line **content= cache->getContent();
 
@@ -313,7 +319,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
             {
                if(l->getAwake() == 0 || l->getAwake() == 1)
                {
-                  l->setSleepTime(l->getSleepTime() + 2000);
+                  l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
                }
 
                l->setAwake(0);
@@ -347,7 +353,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
             {
                if(l->getAwake() == 0 || l->getAwake() == 1)
                {
-                  l->setSleepTime(l->getSleepTime() + 2000);
+                  l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
                }
 
                l->setAwake(0);
@@ -379,6 +385,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
          //if this falls on a sleep-all cycle, then we don't want to sleep anything that's in the current read OR write set
          //nor do we want to sleep anything in the previous write set
+
          while(b < setEnd && currentSets->count(index) == 0 && transGCM->checkWriteSetList(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) != 1)
          {
             Line *l = *b;
@@ -387,14 +394,17 @@ void SMPCache::sleepCacheLines(CPU_t Id)
             {
                if(l->getAwake() == 0 || l->getAwake() == 1)
                {
-                  l->setSleepTime(l->getSleepTime() + 2000);
+                  l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
                }
 
                l->setAwake(0);
+               neitherStopped+=1;
             }
 
             l->setLastSleep(globalClock);
             b++;
+
+
          }//end while-b
 
          index = index + 4;
@@ -403,6 +413,78 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
       delete currentSets;
    }//end sleepType xx
+   else if(sleepType == 98)
+      {
+         std::map< RAddr, uint32_t >* currentSets = transGCM->getCurrentSets(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id);
+         while(index < numLines)
+         {
+            Line **theSet = &content[index];
+            Line **setEnd = theSet + assoc;
+
+            Line **b = theSet;
+
+  //while not in the prediction set
+            while(b < setEnd && currentSets->count(index) == 0 && transGCM->checkAbortPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) != 1 )
+            {
+               Line *l = *b;
+               //std::cout << "boop -- " << std::hex << index << std::dec << "\n";
+
+               if(l)
+               {
+                  if(l->getAwake() == 0 || l->getAwake() == 1)
+                  {
+                     l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
+
+                     }
+                  }
+                  else//the line is awake
+                  {
+                  }
+
+               neitherStopped+=1;//nothing stopped a line from sleeping
+               l->setAwake(0);//sleep the line
+               if (l->getWhyAwake()==true && l->getThereHasBeenRWs()==false){//we only set getWhyAwake to true inside Tx
+                      inaccurate_Prediction+=1;// if we kept a line awake but it wasn't used since the last sleep
+
+
+               }
+
+               l->setLastSleep(globalClock);
+               l->setThereHasBeenRWs(false);//every 2000 cycles we reset this for every line and only change to true if there have been RWs
+               l->setWhyAwake(false);//we have slept the line so it is not intentionally awake
+               b++;
+            }//end while-b
+//while inside the prediction set
+            while (b<setEnd && (currentSets->count(index) != 0 || transGCM->checkAbortPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) == 1))
+            {
+            	Line *l = *b;
+
+            	if(l)
+            	  {
+
+            	  if (l->getWhyAwake()==true && l->getThereHasBeenRWs()==false)
+            	  {
+            	      inaccurate_Prediction+=1;// if we kept a line awake but it wasn't used since the last sleep
+            	  }
+            	  l->setWhyAwake(true);//we are intentionally keeping the line up because it was used in a TX
+
+                  if(currentSets->count(index) != 0)//testing for which structure is responsible for keeping the line awake
+                   {
+                	currentSetsStopped+=1;//noting which structure is responsible for keeping a line up
+                   }
+                  else if (transGCM->checkAbortPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) == 1)
+                   {
+                	abortPredictStopped+=1;
+                   }
+            	  }
+            	b++;
+            }
+            index = index + 4;
+
+         }
+
+         delete currentSets;
+      }//end sleepType xx
 }
 
 void SMPCache::read(MemRequest *mreq)
@@ -422,7 +504,63 @@ void SMPCache::read(MemRequest *mreq)
 void SMPCache::doRead(MemRequest *mreq)
 {
    PAddr addr = mreq->getPAddr();
+   //transGCM->
    Line *l = cache->readLine(addr);
+   //	PREDICTION COUNTER----------------------------------------------------------------------------------------------
+           Line **content= cache->getContent() ;
+           uint assoc   = cache->getAssoc();
+           uint numSets = cache->getNumSets();
+           uint numLines =cache->getNumLines();
+
+           numofrws += 1;
+
+           uint32_t position;
+           int32_t  cpuID = -99;
+           uint insideTx =0;//initialize and if none of the other cases are true this being zero will cause it to skip the code it needs to skip
+
+           position = std::string(getSymbolicName()).find("_DL1");
+   //determine which processor is currently executing
+           if(position != std::string::npos){
+           std::string tempString = std::string(getSymbolicName()).substr(position-2, 1);
+           //std::cout << tempString << "\t" << std::flush;
+           cpuID = atoi(tempString.c_str());
+           }
+
+
+           if(cpuID != 0 && cpuID != -99 && cpuID==0){//tests to see if the processor currently executing is inside a Tx
+                       insideTx= transGCM->tmDepth[0];
+           }
+           else if(cpuID != 0 && cpuID != -99 && cpuID==1){
+                       insideTx= transGCM->tmDepth[1];
+           }
+           else if(cpuID != 0 && cpuID != -99 && cpuID==2){
+                       insideTx= transGCM->tmDepth[2];
+           }
+           else if(cpuID != 0 && cpuID != -99 && cpuID==3){
+                       insideTx= transGCM->tmDepth[3];
+           }
+
+
+ //std::cout<<cpuID<<std::endl;
+ //std::cout<<insideTx<<std::endl;
+
+           if (insideTx>0)//if inside Tx then we can worry about whether or not it is an accurate prediction
+           {
+
+              if(l){//it doesn't matter if its awake or asleep for purposes of prediction counting because some lines are asleep that we leave "awake"
+             	 l->setThereHasBeenRWs(true);//there has been a read/write on this line inside a Tx
+            	  if (l->getWhyAwake()==true){  //true means we left it awake on purpose even if its not actually awake
+            		  accurate_Prediction+=1;//if we left it awake and we are using it its an accurate prediction
+        		      l->setWhyAwake(false);//so we only inc once per line per sleep for now
+            	  }
+            	  else{//why awake is false or not intentionally awake
+
+            	  }
+              }
+
+
+           }
+    // END PRED COUNTER
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
    if(sleepType != 0)
@@ -430,6 +568,7 @@ void SMPCache::doRead(MemRequest *mreq)
       if(l && l->getAwake() == 0)// if line is asleep
       {
          l->setAwake(1);
+
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
             nextTry++;
@@ -440,7 +579,7 @@ void SMPCache::doRead(MemRequest *mreq)
       else if(l && l->getAwake() == 1)// if line is pending awake
       {
          l->wakeLine();
-
+         l->setWhyAwake(false);//line was awoke by a read
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
             nextTry++;
@@ -597,6 +736,62 @@ void SMPCache::doWrite(MemRequest *mreq)
 {
   PAddr addr = mreq->getPAddr();
   Line *l = cache->writeLine(addr);
+
+  //	PREDICTION COUNTER----------------------------------------------------------------------------------------------
+          Line **content= cache->getContent() ;
+          uint assoc   = cache->getAssoc();
+          uint numSets = cache->getNumSets();
+          uint numLines =cache->getNumLines();
+
+          numofrws += 1;
+
+          uint32_t position;
+          int32_t  cpuID = -99;
+          uint insideTx =0;//initialize and if none of the other cases are true this being zero will cause it to skip the code it needs to skip
+
+          position = std::string(getSymbolicName()).find("_DL1");
+  //determine which proceesor is currently executing
+          if(position != std::string::npos){
+          std::string tempString = std::string(getSymbolicName()).substr(position-2, 1);
+          //std::cout << tempString << "\t" << std::flush;
+          cpuID = atoi(tempString.c_str());
+          }
+
+
+          if(cpuID != 0 && cpuID != -99 && cpuID==0){//tests to see if the processor currently executing is inside a Tx
+                      insideTx= transGCM->tmDepth[0];
+          }
+          else if(cpuID != 0 && cpuID != -99 && cpuID==1){
+                      insideTx= transGCM->tmDepth[1];
+          }
+          else if(cpuID != 0 && cpuID != -99 && cpuID==2){
+                      insideTx= transGCM->tmDepth[2];
+          }
+          else if(cpuID != 0 && cpuID != -99 && cpuID==3){
+                      insideTx= transGCM->tmDepth[3];
+          }
+
+
+//std::cout<<cpuID<<std::endl;
+//std::cout<<insideTx<<std::endl;
+
+          if (insideTx>0)//if inside Tx then we can worry about whether or not it is an accurate prediction
+          {
+
+             if(l){//it doesn't matter if its awake or asleep for purposes of prediction counting because some lines are asleep that we leave "awake"
+            	 l->setThereHasBeenRWs(true);//there has been a read/write on this line inside a Tx
+           	  if (l->getWhyAwake()==true){  //true means we left it awake on purpose even if its not actually awake
+           		  accurate_Prediction+=1;//if we left it awake and we are using it its an accurate prediction
+       		      l->setWhyAwake(false);//so we only inc once per line per sleep for now
+           	  }
+           	  else{//why awake is false or not intentionally awake
+
+           	  }
+             }
+
+
+          }
+   // END PRED COUNTER
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
    if(sleepType != 0)
