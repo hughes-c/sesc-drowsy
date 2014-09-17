@@ -50,6 +50,7 @@ struct GCMFinalRet{
   int abortCount;
   long long tuid;
 
+
    //!< This allows tagging of DINST instructions with information as to whether the transaction is new, replayed, or subsumed
   int BCFlag;
 };
@@ -180,6 +181,9 @@ class transCoherence{
    const    std::vector< GProcessor * > *prPointer;
    void     set_prPointer(const std::vector< GProcessor * > *boo) { prPointer = boo; }
    int tmDepth[MAX_CPU_COUNT];
+   int tmFlag [MAX_CPU_COUNT];
+
+
   private:
     int           numProcs;
     float         alpha;

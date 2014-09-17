@@ -22,6 +22,8 @@
 
 #include "GProcessor.h"
 
+
+
 /**
  * @ingroup transContext
  * @brief   Default constructor
@@ -90,6 +92,7 @@ transactionContext::~transactionContext()
 */
 void transactionContext::beginTransaction(thread_ptr pthread, icode_ptr picode)
 {
+	transGCM->tmFlag[pthread->getPid()]=1;
 
   GCMFinalRet retval = transGCM->begin(pthread->getPid(), picode);
 

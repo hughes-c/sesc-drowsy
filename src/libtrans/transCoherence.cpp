@@ -107,6 +107,7 @@ transCoherence::transCoherence(FILE* out, int conflicts, int versioning, int cac
       abortReason[i].first = 0;
       abortReason[i].second = 0;
       tmDepth[i] = 0;
+      tmFlag[i] = 0;
       currentCommitter = -1;
 
       conflictProbability[i] = 0.35;
@@ -403,7 +404,7 @@ GCMFinalRet transCoherence::beginEE(int pid, icode_ptr picode)
    //!  Subsume all nested transactions for now
    if(tmDepth[pid]>0)
    {
-//THIS IS WHERE I THINK WE SHOULD CALL SLEEPLINES
+
 	   //tmReport->registerBegin(transState[pid].utid,pid,tid,transState[pid].timestamp);
       tmDepth[pid]++;
       retVal.ret = IGNORE;
