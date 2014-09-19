@@ -235,6 +235,11 @@ std::cout<<"Total number of reads and writes is "<<numofrws<<std::endl;
 
          if(l)
          {
+            if(l->getAwake() == 0 || l->getAwake() == 1)
+            {
+               l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
+            }
+            
             Report::field("%s:Line%d:PerformanceLoss=%llu, SleepCycles=%llu", this->getSymbolicName(), index, l->getPerformanceLoss(), l->getSleepTime());
          }
 
@@ -323,9 +328,9 @@ void SMPCache::sleepCacheLines(CPU_t Id)
                }
 
                l->setAwake(0);
+               l->setLastSleep(globalClock);
             }
 
-            l->setLastSleep(globalClock);
             b++;
          }//end while-b
 
@@ -357,9 +362,9 @@ void SMPCache::sleepCacheLines(CPU_t Id)
                }
 
                l->setAwake(0);
+               l->setLastSleep(globalClock);
             }
 
-            l->setLastSleep(globalClock);
             b++;
          }//end while-b
 
@@ -398,10 +403,11 @@ void SMPCache::sleepCacheLines(CPU_t Id)
                }
 
                l->setAwake(0);
+               l->setLastSleep(globalClock);
+
                neitherStopped+=1;
             }
 
-            l->setLastSleep(globalClock);
             b++;
 
 
@@ -435,22 +441,25 @@ void SMPCache::sleepCacheLines(CPU_t Id)
                   {
                      l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                   }
+
+                  l->setAwake(0);//sleep the line
+                  l->setLastSleep(globalClock);
+
+                  neitherStopped+=1;//nothing stopped a line from sleeping
+
+                  if(l->getWhyAwake() == true && l->getThereHasBeenRWs() == false)     //we only set getWhyAwake to true inside Tx
+                  {
+                     inaccurate_Prediction = inaccurate_Prediction + 1;             // if we kept a line awake but it wasn't used since the last sleep
+                  }
+
+                  l->setThereHasBeenRWs(false);                                         //every 2000 cycles we reset this for every line and only change to true if there have been RWs
+                  l->setWhyAwake(false);                                                //we have slept the line so it is not intentionally awake
+
                }
                else//the line is awake
                {
                }
 
-               neitherStopped+=1;//nothing stopped a line from sleeping
-               l->setAwake(0);//sleep the line
-
-               if(l->getWhyAwake() == true && l->getThereHasBeenRWs() == false)     //we only set getWhyAwake to true inside Tx
-               {
-                      inaccurate_Prediction = inaccurate_Prediction + 1;             // if we kept a line awake but it wasn't used since the last sleep
-               }
-
-               l->setLastSleep(globalClock);
-               l->setThereHasBeenRWs(false);                                         //every 2000 cycles we reset this for every line and only change to true if there have been RWs
-               l->setWhyAwake(false);                                                //we have slept the line so it is not intentionally awake
                b++;
             }//end while-b
 
