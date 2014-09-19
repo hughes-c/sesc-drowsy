@@ -686,7 +686,7 @@ void GProcessor::retire()
 
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
 
-   if((transGCM->tmFlag[getId()]==1)||(globalClock > 0 && globalClock % 2000 == 0))
+   if((transGCM->tmFlag[getId()] == 1) || (globalClock > 0 && globalClock % 2000 == 0))
    {
 
       MemObj *localSource = this->memorySystem->getDataSource();
@@ -694,8 +694,11 @@ void GProcessor::retire()
       //std::cout<<transGCM->tmDepth[getId()]<<std::endl;
       //TODO add drowsy test here?
       if(std::string(localSource->getSymbolicName()).find("_D") != std::string::npos)          //test for data cache
-         {localSource->sleepCacheLines(getId());}
-      transGCM->tmFlag[getId()]=0;
+      {
+         localSource->sleepCacheLines(getId());
+      }
+
+      transGCM->tmFlag[getId()] = 0;
 
    }
 

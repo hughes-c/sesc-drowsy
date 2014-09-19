@@ -407,7 +407,7 @@ private:
   bool whyAwake;             //0=woken by read or write 1=kept awake in pred set
   bool thereHasBeenRWs;     // true - there has been a read or write on the line since last sleep
 public:
-  uint64_t lastSleep;//changed to public to access in SMPCache
+   uint64_t lastSleep;        //changed to public to access in SMPCache
    virtual ~StateGeneric()
    {
       tag = 0;
@@ -421,9 +421,9 @@ public:
    void     setLastSleep(uint64_t sleepy) { lastSleep = sleepy; }
    uint32_t getAwake() const { return awakeState; }
    void     setAwake(uint32_t awake) { awakeState = awake; }
-   bool getWhyAwake() const { return whyAwake; }
+   bool     getWhyAwake() const { return whyAwake; }
    void     setWhyAwake(bool predict) { whyAwake = predict; }
-   bool getThereHasBeenRWs() const { return thereHasBeenRWs; }
+   bool     getThereHasBeenRWs() const { return thereHasBeenRWs; }
    void     setThereHasBeenRWs(bool readwrite) { thereHasBeenRWs = readwrite; }
 
 
