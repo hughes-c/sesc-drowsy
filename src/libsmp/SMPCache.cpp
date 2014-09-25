@@ -235,7 +235,7 @@ std::cout<<"Total number of reads and writes is "<<numofrws<<std::endl;
 
          if(l)
          {
-            if(l->getAwake() == 0 || l->getAwake() == 1)
+            if(l->getAwake() <= l->getWaketime())
             {
                l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
             }
@@ -322,7 +322,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
             if(l)
             {
-               if(l->getAwake() == 0 || l->getAwake() == 1)
+               if(l->getAwake() <= l->getWaketime())
                {
                   l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                }
@@ -356,7 +356,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 //             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
             if(l)
             {
-               if(l->getAwake() == 0 || l->getAwake() == 1)
+               if(l->getAwake() <= l->getWaketime())
                {
                   l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                }
@@ -397,7 +397,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 //             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
             if(l)
             {
-               if(l->getAwake() == 0 || l->getAwake() == 1)
+               if(l->getAwake() <= l->getWaketime())
                {
                   l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                }
@@ -437,7 +437,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
                if(l)
                {
-                  if(l->getAwake() == 0 || l->getAwake() == 1)
+                  if(l->getAwake() <= l->getWaketime())
                   {
                      l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                   }
@@ -576,9 +576,9 @@ void SMPCache::doRead(MemRequest *mreq)
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
    if(sleepType != 0)
    {
-      if(l && l->getAwake() == 0)// if line is asleep
+      if(l && l->getAwake() < l->getWaketime())// if line is asleep
       {
-         l->setAwake(1);
+         l->setAwake(l->getAwake() + 1);
 
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
@@ -587,10 +587,13 @@ void SMPCache::doRead(MemRequest *mreq)
 
          return;
       }
-      else if(l && l->getAwake() == 1)// if line is pending awake
+      else if(l && l->getAwake() == l->getWaketime())// if line is pending awake
       {
+         l->setAwake(l->getAwake() + 1);
+
          l->wakeLine();
          l->setWhyAwake(false);//line was awoke by a read
+
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
             nextTry++;
@@ -807,9 +810,9 @@ void SMPCache::doWrite(MemRequest *mreq)
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
    if(sleepType != 0)
    {
-      if(l && l->getAwake() == 0)// if line is asleep
+      if(l && l->getAwake() < l->getWaketime()) // if line is asleep
       {
-         l->setAwake(1);
+         l->setAwake(l->getAwake() + 1);
 
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
@@ -818,8 +821,10 @@ void SMPCache::doWrite(MemRequest *mreq)
 
          return;
       }
-      else if(l && l->getAwake() == 1)// if line is pending awake
+      else if(l && l->getAwake() == l->getWaketime())// if line is pending awake
       {
+         l->setAwake(l->getAwake() + 1);
+         
          l->wakeLine();
 
          Time_t nextTry = nextSlot();
