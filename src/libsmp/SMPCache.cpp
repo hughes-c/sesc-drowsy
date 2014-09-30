@@ -235,10 +235,18 @@ std::cout<<"Total number of reads and writes is "<<numofrws<<std::endl;
 
          if(l)
          {
+<<<<<<< HEAD
         	 if(l->getAwake() == 0 || l->getAwake() == 1)
         	                {
         	                   l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
         	                }
+=======
+            if(l->getAwake() <= l->getWaketime())
+            {
+               l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
+            }
+            
+>>>>>>> 688e8d3bdd7c2d15a50336b137cb3d3b5d4f6ce1
             Report::field("%s:Line%d:PerformanceLoss=%llu, SleepCycles=%llu", this->getSymbolicName(), index, l->getPerformanceLoss(), l->getSleepTime());
          }
 
@@ -298,11 +306,11 @@ void SMPCache::access(MemRequest *mreq)
 
 void SMPCache::sleepCacheLines(CPU_t Id)
 {
-   Line **content= cache->getContent() ;
+   Line **content = cache->getContent() ;
 
-   uint assoc   = cache->getAssoc();
-   uint numSets = cache->getNumSets();
-   uint numLines =cache->getNumLines();
+   uint assoc     = cache->getAssoc();
+   uint numSets   = cache->getNumSets();
+   uint numLines  = cache->getNumLines();
 
    uint index = 0;
 
@@ -321,15 +329,15 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
             if(l)
             {
-               if(l->getAwake() == 0 || l->getAwake() == 1)
+               if(l->getAwake() <= l->getWaketime())
                {
-                  l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
+                  l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                }
 
                l->setAwake(0);
+               l->setLastSleep(globalClock);
             }
 
-            l->setLastSleep(globalClock);
             b++;
          }//end while-b
 
@@ -355,15 +363,15 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 //             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
             if(l)
             {
-               if(l->getAwake() == 0 || l->getAwake() == 1)
+               if(l->getAwake() <= l->getWaketime())
                {
-                  l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
+                  l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                }
 
                l->setAwake(0);
+               l->setLastSleep(globalClock);
             }
 
-            l->setLastSleep(globalClock);
             b++;
          }//end while-b
 
@@ -396,16 +404,17 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 //             std::cout << "boop -- " << std::hex << index << std::dec << "\n";
             if(l)
             {
-               if(l->getAwake() == 0 || l->getAwake() == 1)
+               if(l->getAwake() <= l->getWaketime())
                {
-                  l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
+                  l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                }
 
                l->setAwake(0);
+               l->setLastSleep(globalClock);
+
                neitherStopped+=1;
             }
 
-            l->setLastSleep(globalClock);
             b++;
 
 
@@ -427,7 +436,7 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
             Line **b = theSet;
 
-  //while not in the prediction set
+            //while not in the prediction set
             while(b < setEnd && currentSets->count(index) == 0 && transGCM->checkAbortPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) != 1 )
             {
                Line *l = *b;
@@ -435,54 +444,59 @@ void SMPCache::sleepCacheLines(CPU_t Id)
 
                if(l)
                {
-                  if(l->getAwake() == 0 || l->getAwake() == 1)
+                  if(l->getAwake() <= l->getWaketime())
                   {
-                     l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
-
-                     }
-                  }
-                  else//the line is awake
-                  {
+                     l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
                   }
 
-               neitherStopped+=1;//nothing stopped a line from sleeping
-               l->setAwake(0);//sleep the line
-               if (l->getWhyAwake()==true && l->getThereHasBeenRWs()==false){//we only set getWhyAwake to true inside Tx
-                      inaccurate_Prediction+=1;// if we kept a line awake but it wasn't used since the last sleep
+                  l->setAwake(0);//sleep the line
+                  l->setLastSleep(globalClock);
 
+                  neitherStopped+=1;//nothing stopped a line from sleeping
+
+                  if(l->getWhyAwake() == true && l->getThereHasBeenRWs() == false)     //we only set getWhyAwake to true inside Tx
+                  {
+                     inaccurate_Prediction = inaccurate_Prediction + 1;             // if we kept a line awake but it wasn't used since the last sleep
+                  }
+
+                  l->setThereHasBeenRWs(false);                                         //every 2000 cycles we reset this for every line and only change to true if there have been RWs
+                  l->setWhyAwake(false);                                                //we have slept the line so it is not intentionally awake
 
                }
+               else//the line is awake
+               {
+               }
 
-               l->setLastSleep(globalClock);
-               l->setThereHasBeenRWs(false);//every 2000 cycles we reset this for every line and only change to true if there have been RWs
-               l->setWhyAwake(false);//we have slept the line so it is not intentionally awake
                b++;
             }//end while-b
-//while inside the prediction set
-            while (b<setEnd && (currentSets->count(index) != 0 || transGCM->checkAbortPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) == 1))
+
+            //while inside the prediction set
+            while(b < setEnd && (currentSets->count(index) != 0 || transGCM->checkAbortPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) == 1))
             {
-            	Line *l = *b;
+               Line *l = *b;
 
-            	if(l)
-            	  {
+               if(l)
+               {
 
-            	  if (l->getWhyAwake()==true && l->getThereHasBeenRWs()==false)
-            	  {
-            	      inaccurate_Prediction+=1;// if we kept a line awake but it wasn't used since the last sleep
-            	  }
-            	  l->setWhyAwake(true);//we are intentionally keeping the line up because it was used in a TX
+                  if(l->getWhyAwake() == true && l->getThereHasBeenRWs() == false)
+                  {
+                     inaccurate_Prediction = inaccurate_Prediction + 1;                   // if we kept a line awake but it wasn't used since the last sleep
+                  }
 
-                  if(currentSets->count(index) != 0)//testing for which structure is responsible for keeping the line awake
-                   {
-                	currentSetsStopped+=1;//noting which structure is responsible for keeping a line up
-                   }
+                  l->setWhyAwake(true);                                                  //we are intentionally keeping the line up because it was used in a TX
+
+                  if(currentSets->count(index) != 0)                                     //testing for which structure is responsible for keeping the line awake
+                  {
+                     currentSetsStopped = currentSetsStopped + 1;                        //noting which structure is responsible for keeping a line up
+                  }
                   else if (transGCM->checkAbortPredictionSet(cache->getLog2AddrLs(), cache->getMaskSets(), cache->getLog2Assoc(), Id, index) == 1)
-                   {
-                	abortPredictStopped+=1;
-                   }
-            	  }
-            	b++;
+                  {
+                     abortPredictStopped = abortPredictStopped + 1;
+                  }
+               }
+               b++;
             }
+
             index = index + 4;
 
          }
@@ -569,9 +583,9 @@ void SMPCache::doRead(MemRequest *mreq)
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
    if(sleepType != 0)
    {
-      if(l && l->getAwake() == 0)// if line is asleep
+      if(l && l->getAwake() < l->getWaketime())// if line is asleep
       {
-         l->setAwake(1);
+         l->setAwake(l->getAwake() + 1);
 
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
@@ -580,10 +594,13 @@ void SMPCache::doRead(MemRequest *mreq)
 
          return;
       }
-      else if(l && l->getAwake() == 1)// if line is pending awake
+      else if(l && l->getAwake() == l->getWaketime())// if line is pending awake
       {
+         l->setAwake(l->getAwake() + 1);
+
          l->wakeLine();
          l->setWhyAwake(false);//line was awoke by a read
+
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
             nextTry++;
@@ -800,9 +817,9 @@ void SMPCache::doWrite(MemRequest *mreq)
 //BEGIN DROWSY ---------------------------------------------------------------------------------------------------------
    if(sleepType != 0)
    {
-      if(l && l->getAwake() == 0)// if line is asleep
+      if(l && l->getAwake() < l->getWaketime()) // if line is asleep
       {
-         l->setAwake(1);
+         l->setAwake(l->getAwake() + 1);
 
          Time_t nextTry = nextSlot();
          if(nextTry == globalClock)
@@ -811,8 +828,10 @@ void SMPCache::doWrite(MemRequest *mreq)
 
          return;
       }
-      else if(l && l->getAwake() == 1)// if line is pending awake
+      else if(l && l->getAwake() == l->getWaketime())// if line is pending awake
       {
+         l->setAwake(l->getAwake() + 1);
+         
          l->wakeLine();
 
          Time_t nextTry = nextSlot();
