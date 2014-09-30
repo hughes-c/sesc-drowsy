@@ -439,13 +439,16 @@ public:
 
    void wakeLine()
    {
-      if(globalClock != wakeClock)
+      if(globalClock != wakeClock) //if global clock does not equal 0
       {
-         awakeState = 2;
-         if(lastSleep != 0)
+         awakeState = 2;//wake up the line
+         if(lastSleep != 0)// if last sleep does not equal 0
          {
-            sleepTime = sleepTime + globalClock - lastSleep;
+            sleepTime = sleepTime + globalClock - lastSleep;// accumulate sleep time
             performanceLoss = performanceLoss + 1;
+         }
+         else{/*nothing last sleep should never equal zero*/
+        	  std::cout << "why is this happening"<<std::endl;
          }
          wakeClock = globalClock;
       }
