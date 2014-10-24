@@ -235,11 +235,18 @@ std::cout<<"Total number of reads and writes is "<<numofrws<<std::endl;
 
          if(l)
          {
+<<<<<<< HEAD
+        	 if(l->getAwake() == 0 || l->getAwake() == 1)
+        	                {
+        	                   l->setSleepTime(l->getSleepTime() + globalClock - l->lastSleep);
+        	                }
+=======
             if(l->getAwake() <= l->getWaketime())
             {
                l->setSleepTime(l->getSleepTime() + globalClock - l->getLastSleep());
             }
             
+>>>>>>> 688e8d3bdd7c2d15a50336b137cb3d3b5d4f6ce1
             Report::field("%s:Line%d:PerformanceLoss=%llu, SleepCycles=%llu", this->getSymbolicName(), index, l->getPerformanceLoss(), l->getSleepTime());
          }
 

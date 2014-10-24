@@ -92,12 +92,14 @@ transactionContext::~transactionContext()
 */
 void transactionContext::beginTransaction(thread_ptr pthread, icode_ptr picode)
 {
-	transGCM->tmFlag[pthread->getPid()]=1;
+	//transGCM->tmFlag[pthread->getPid()]=1;
 
   GCMFinalRet retval = transGCM->begin(pthread->getPid(), picode);
 
   if(retval.ret == SUCCESS)
   {
+	//transGCM->tmFlag[pthread->getPid()]=1; moved to commit for new idea
+
     int i;
     this->pid = pthread->getPid();
     this->tid = picode->immed;
@@ -225,7 +227,7 @@ void transactionContext::abortTransaction(thread_ptr pthread)
 void transactionContext::commitTransaction(thread_ptr pthread, icode_ptr picode)
 {
   struct GCMFinalRet retVal = transGCM->commit(this->pid, this->tid);
-
+  transGCM->tmFlag[pthread->getPid()]=1;
   //! We first delay during the commit
   if(retVal.ret == COMMIT_DELAY)
   {
@@ -252,6 +254,7 @@ void transactionContext::commitTransaction(thread_ptr pthread, icode_ptr picode)
   //! If we have already delayed, go ahead and finalize commit in memory
   else
   {
+
     pthread->decTMdepth();
 
     std::map<RAddr, IntRegValue>::iterator begin = this->cacheGetBeginIterator();
