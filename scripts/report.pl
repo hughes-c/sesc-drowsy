@@ -1462,7 +1462,7 @@ sub simStats {
   printf " %10.4f MHz ",1e-6/($secs/$nCycles);
 
   printf " %10.3f secs ",$secs;
-
+  printf " %10.3f -------------------------------- ", $nCycles;
   printf " %10.3f msec",(1e-3/$freq)*$nCycles;
   printf " (rabbit)" if( $cf->getResultField("OSSim","rabbit") );
 

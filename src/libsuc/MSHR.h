@@ -628,14 +628,14 @@ template<class Addr_t, class Cache_t>
     int getnWrites() const { return nWrites; }
 
     int getUsedReads(Addr_t paddr) {
-      MSHRit it = ms.find(calcLineAddr(paddr));
+      MSHRit it = ms.find(this->calcLineAddr(paddr));
       I(it != ms.end());
       
       return (*it).second.getUsedReads();
     }
 
     int getUsedWrites(Addr_t paddr) {
-      MSHRit it = ms.find(calcLineAddr(paddr));
+      MSHRit it = ms.find(this->calcLineAddr(paddr));
       I(it != ms.end());
       
       return (*it).second.getUsedWrites();
@@ -686,7 +686,7 @@ template<class Addr_t, class Cache_t>
     bool checkingOverflow;
   
     int calcBankIndex(Addr_t paddr) const { 
-      paddr = calcLineAddr(paddr);
+      paddr = this->calcLineAddr(paddr);
       Addr_t idx = (paddr >> (16 - Log2LineSize/2)) ^ (paddr & 0x0000ffff);
       return  idx % nBanks;  // TODO:move to a mask
     }

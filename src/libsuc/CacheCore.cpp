@@ -313,7 +313,7 @@ CacheAssoc<State, Addr_t, Energy>::CacheAssoc(int size, int assoc, int blksize, 
 template<class State, class Addr_t, bool Energy>
 typename CacheAssoc<State, Addr_t, Energy>::Line *CacheAssoc<State, Addr_t, Energy>::findLinePrivate(Addr_t addr)
 {
-  Addr_t tag = calcTag(addr);
+  Addr_t tag = this->calcTag(addr);
 
   GI(Energy, goodInterface); // If modeling energy. Do not use this
                              // interface directly. use readLine and
@@ -321,7 +321,7 @@ typename CacheAssoc<State, Addr_t, Energy>::Line *CacheAssoc<State, Addr_t, Ener
                              // inside debugging only use
                              // findLineDebug instead
 
-  Line **theSet = &content[calcIndex4Tag(tag)];
+  Line **theSet = &content[this->calcIndex4Tag(tag)];
 
   // Check most typical case
   if ((*theSet)->getTag() == tag) {
@@ -372,8 +372,8 @@ template<class State, class Addr_t, bool Energy>
 typename CacheAssoc<State, Addr_t, Energy>::Line 
 *CacheAssoc<State, Addr_t, Energy>::findLine2Replace(Addr_t addr, bool ignoreLocked)
 { 
-  Addr_t tag    = calcTag(addr);
-  Line **theSet = &content[calcIndex4Tag(tag)];
+  Addr_t tag    = this->calcTag(addr);
+  Line **theSet = &content[this->calcIndex4Tag(tag)];
 
   // Check most typical case
   if ((*theSet)->getTag() == tag) {
@@ -482,7 +482,7 @@ CacheDM<State, Addr_t, Energy>::CacheDM(int size, int blksize, int addrUnit, con
 template<class State, class Addr_t, bool Energy>
 typename CacheDM<State, Addr_t, Energy>::Line *CacheDM<State, Addr_t, Energy>::findLinePrivate(Addr_t addr)
 {
-  Addr_t tag = calcTag(addr);
+  Addr_t tag = this->calcTag(addr);
 
   GI(Energy, goodInterface); // If modeling energy. Do not use this
                              // interface directly. use readLine and
@@ -490,7 +490,7 @@ typename CacheDM<State, Addr_t, Energy>::Line *CacheDM<State, Addr_t, Energy>::f
                              // inside debugging only use
                              // findLineDebug instead
 
-  Line *line = content[calcIndex4Tag(tag)];
+  Line *line = content[this->calcIndex4Tag(tag)];
 
   if (line->getTag() == tag) {
     I(line->isValid());
@@ -501,11 +501,10 @@ typename CacheDM<State, Addr_t, Energy>::Line *CacheDM<State, Addr_t, Energy>::f
 }
 
 template<class State, class Addr_t, bool Energy>
-typename CacheDM<State, Addr_t, Energy>::Line 
-*CacheDM<State, Addr_t, Energy>::findLine2Replace(Addr_t addr, bool ignoreLocked)
+typename CacheDM<State, Addr_t, Energy>::Line *CacheDM<State, Addr_t, Energy>::findLine2Replace(Addr_t addr, bool ignoreLocked)
 { 
-  Addr_t tag = calcTag(addr);
-  Line *line = content[calcIndex4Tag(tag)];
+  Addr_t tag = this->calcTag(addr);
+  Line *line = content[this->calcIndex4Tag(tag)];
 
   if (ignoreLocked)
     return line;
@@ -545,7 +544,7 @@ CacheDMSkew<State, Addr_t, Energy>::CacheDMSkew(int size, int blksize, int addrU
 template<class State, class Addr_t, bool Energy>
 typename CacheDMSkew<State, Addr_t, Energy>::Line *CacheDMSkew<State, Addr_t, Energy>::findLinePrivate(Addr_t addr)
 {
-  Addr_t tag = calcTag(addr);
+  Addr_t tag = this->calcTag(addr);
 
   GI(Energy, goodInterface); // If modeling energy. Do not use this
                              // interface directly. use readLine and
@@ -553,7 +552,7 @@ typename CacheDMSkew<State, Addr_t, Energy>::Line *CacheDMSkew<State, Addr_t, En
                              // inside debugging only use
                              // findLineDebug instead
 
-  Line *line = content[calcIndex4Tag(tag)];
+  Line *line = content[this->calcIndex4Tag(tag)];
 
   if (line->getTag() == tag) {
     I(line->isValid());
@@ -561,8 +560,8 @@ typename CacheDMSkew<State, Addr_t, Energy>::Line *CacheDMSkew<State, Addr_t, En
   }
 
   // BEGIN Skew cache
-  Addr_t tag2 = calcTag(addr ^ (addr>>7));
-  line = content[calcIndex4Tag(tag2)];
+  Addr_t tag2 = this->calcTag(addr ^ (addr>>7));
+  line = content[this->calcIndex4Tag(tag2)];
 
   if (line->getTag() == tag) {
     I(line->isValid());
@@ -577,8 +576,8 @@ template<class State, class Addr_t, bool Energy>
 typename CacheDMSkew<State, Addr_t, Energy>::Line 
 *CacheDMSkew<State, Addr_t, Energy>::findLine2Replace(Addr_t addr, bool ignoreLocked)
 { 
-  Addr_t tag = calcTag(addr);
-  Line *line = content[calcIndex4Tag(tag)];
+  Addr_t tag = this->calcTag(addr);
+  Line *line = content[this->calcIndex4Tag(tag)];
 
   if (ignoreLocked)
 	return line;
@@ -592,8 +591,8 @@ typename CacheDMSkew<State, Addr_t, Energy>::Line
     return 0;
 
   // BEGIN Skew cache
-  Addr_t tag2 = calcTag(addr ^ (addr>>7));
-  Line *line2 = content[calcIndex4Tag(tag2)];
+  Addr_t tag2 = this->calcTag(addr ^ (addr>>7));
+  Line *line2 = content[this->calcIndex4Tag(tag2)];
 
   if (line2->getTag() == tag) {
     I(line2->isValid());

@@ -447,12 +447,9 @@ public:
    {
       if(globalClock != wakeClock) //if global clock does not equal 0
       {
-<<<<<<< HEAD
+
          awakeState = 2;//wake up the line
          if(lastSleep != 0)// if last sleep does not equal 0
-=======
-         if(lastSleep != 0)
->>>>>>> 688e8d3bdd7c2d15a50336b137cb3d3b5d4f6ce1
          {
             sleepTime = sleepTime + globalClock - lastSleep;// accumulate sleep time
             performanceLoss = performanceLoss + 1;
